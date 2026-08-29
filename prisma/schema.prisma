@@ -1,0 +1,294 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  passwordHash  String?
+  avatar        String?
+  role          String   @default("user")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  resume        Resume?
+  profile       UserProfile?
+  subscription  Subscription?
+  applications  Application[]
+  savedJobs     SavedJob[]
+  aiUsage       AIUsage[]
+  resumeVersions ResumeVersion[]
+  interviewPreps InterviewPrep[]
+  referrals     Referral[]
+  emailTracks   EmailTrack[]
+  pushSubs      PushSubscription[]
+  teamMemberships TeamMember[]
+  jobAlerts     JobAlert[]
+  linkedinOpt   LinkedInOptimization?
+  postedJobs    JobPosting[]
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills      String   @default("[]")
+  experience  String?
+  education   String?
+  goals       String?
+  location    String?
+  phone       String?
+  linkedinUrl String?
+}
+
+model Resume {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName      String
+  fileUrl       String
+  fileType      String
+  rawText       String?
+  parsedData    String?
+  uploadedAt    DateTime @default(now())
+}
+
+model ResumeVersion {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  originalResume String?
+  customizedFor String?
+  skills        String   @default("[]")
+  experience    String?
+  education     String?
+  goals         String?
+  fileName      String?
+  fileUrl       String?
+  createdAt     DateTime @default(now())
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan              String   @default("FREE")
+  applicationsUsed  Int      @default(0)
+  applicationsLimit Int      @default(5)
+  startDate         DateTime @default(now())
+  endDate           DateTime?
+  paymentId         String?
+  razorpayId        String?
+  stripeId          String?
+}
+
+model Job {
+  id            String   @id @default(cuid())
+  title         String
+  company       String
+  location      String?
+  salaryMin     String?
+  salaryMax     String?
+  currency      String   @default("INR")
+  description   String
+  requirements  String   @default("[]")
+  url           String
+  source        String
+  postedAt      DateTime?
+  scrapedAt     DateTime @default(now())
+  isActive      Boolean  @default(true)
+
+  applications  Application[]
+  matchScores   MatchScore[]
+}
+
+model MatchScore {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  score     Float
+  reasoning String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+}
+
+model Application {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId           String
+  job             Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status          String   @default("PENDING")
+  customizedResume String?
+  coverLetter     String?
+  emailBody       String?
+  linkedinMessage String?
+  sentAt          DateTime?
+  responseAt      DateTime?
+  createdAt       DateTime @default(now())
+  emailTracks     EmailTrack[]
+}
+
+model SavedJob {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  action    String
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, jobId])
+}
+
+model AIUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  tokens    Int
+  createdAt DateTime @default(now())
+}
+
+model EmailTrack {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  recipientEmail String
+  subject       String
+  sentAt        DateTime @default(now())
+  openedAt      DateTime?
+  openCount     Int      @default(0)
+  clickedAt     DateTime?
+  clickCount    Int      @default(0)
+  trackingId    String   @unique
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, endpoint])
+}
+
+model InterviewPrep {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobTitle    String
+  company     String
+  questions   String   @default("[]")
+  tips        String?
+  createdAt   DateTime @default(now())
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  company     String
+  title       String?
+  linkedinUrl String?
+  email       String?
+  status      String   @default("FOUND")
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  ownerId     String
+  plan        String   @default("TEAM")
+  memberLimit Int      @default(5)
+  createdAt   DateTime @default(now())
+  members     TeamMember[]
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model JobAlert {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keywords    String
+  location    String?
+  frequency   String   @default("daily")
+  isActive    Boolean  @default(true)
+  lastSentAt  DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model LinkedInOptimization {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline      String?
+  summary       String?
+  experience    String?
+  skills        String?
+  recommendations String?
+  optimizedAt   DateTime @default(now())
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  purpose   String   @default("login")
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, code])
+}
+
+model JobPosting {
+  id            String   @id @default(cuid())
+  postedBy      String
+  poster        User     @relation(fields: [postedBy], references: [id], onDelete: Cascade)
+  title         String
+  company       String
+  location      String?
+  salaryMin     String?
+  salaryMax     String?
+  currency      String   @default("INR")
+  jobType       String   @default("full-time")
+  description   String
+  requirements  String   @default("[]")
+  contactEmail  String?
+  contactPhone  String?
+  contactLinkedin String?
+  isRemote      Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  views         Int      @default(0)
+  applications  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
