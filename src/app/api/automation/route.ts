@@ -78,23 +78,64 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Find company contacts (AI-generated with email patterns)
-    let contacts;
-    try {
-      contacts = await findCompanyContacts(company, jobTitle);
-    } catch (aiError) {
-      console.error("AI contact finding failed:", aiError);
-      contacts = [{
-        name: "Hiring Manager",
-        title: "Talent Acquisition",
-        email: `hr@${company.toLowerCase().replace(/\s+/g, "")}.com`,
-        emailVerified: false,
-        linkedinSearchUrl: `https://www.google.com/search?q=site:linkedin.com/in+"${encodeURIComponent(company)}"+"hiring+manager"`,
-        linkedinProfileUrl: null,
+    // Find company contacts — first check job posting contact fields
+    let contacts: any[] = [];
+    
+    // Check if job posting has a contact email
+    const postedJob = jobId ? await prisma.jobPosting.findUnique({ where: { id: jobId } }) : null;
+    if (postedJob?.contactEmail) {
+      contacts.push({
+        name: postedJob.contactLinkedin || "Hiring Manager",
+        title: "Contact",
+        email: postedJob.contactEmail,
+        emailVerified: true,
+        linkedinSearchUrl: postedJob.contactLinkedin || null,
+        linkedinProfileUrl: postedJob.contactLinkedin || null,
         company,
-        confidence: "low" as const,
-        notes: `Search LinkedIn for hiring managers at ${company}`,
-      }];
+        confidence: "high" as const,
+        notes: "Email found in job posting",
+      });
+    }
+    
+    // Also extract emails from job description
+    if (jobDescription) {
+      const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]{2,})/gi;
+      const foundEmails = jobDescription.match(emailRegex) || [];
+      for (const email of foundEmails) {
+        if (!contacts.some(c => c.email === email) && !email.includes('example.com') && !email.includes('sentry.io')) {
+          contacts.push({
+            name: "Hiring Manager",
+            title: "Contact",
+            email,
+            emailVerified: false,
+            linkedinSearchUrl: null,
+            linkedinProfileUrl: null,
+            company,
+            confidence: "medium" as const,
+            notes: "Email extracted from job description",
+          });
+        }
+      }
+    }
+    
+    // Fall back to AI contact finding if no contacts found yet
+    if (contacts.length === 0) {
+      try {
+        contacts = await findCompanyContacts(company, jobTitle);
+      } catch (aiError) {
+        console.error("AI contact finding failed:", aiError);
+        contacts = [{
+          name: "Hiring Manager",
+          title: "Talent Acquisition",
+          email: `hr@${company.toLowerCase().replace(/\s+/g, "")}.com`,
+          emailVerified: false,
+          linkedinSearchUrl: `https://www.google.com/search?q=site:linkedin.com/in+"${encodeURIComponent(company)}"+"hiring+manager"`,
+          linkedinProfileUrl: null,
+          company,
+          confidence: "low" as const,
+          notes: `Search LinkedIn for hiring managers at ${company}`,
+        }];
+      }
     }
 
     // Generate materials and AUTO-SEND for each contact
@@ -217,6 +258,25 @@ export async function POST(req: NextRequest) {
         sentAt: new Date(),
       },
     });
+
+    // Create email tracking records for sent emails
+    for (const action of actions) {
+      if (action.emailSent && action.email) {
+        try {
+          await prisma.emailTrack.create({
+            data: {
+              userId: session.user.id,
+              applicationId: application.id,
+              recipientEmail: action.email,
+              subject: action.emailSubject || `Application for ${jobTitle}`,
+              trackingId: `auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            },
+          });
+        } catch (e) {
+          console.error("Email tracking record failed:", e);
+        }
+      }
+    }
 
     // Increment usage
     if (subscription) {

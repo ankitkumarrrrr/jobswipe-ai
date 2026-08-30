@@ -1,17 +1,45 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, MousePointerClick, Clock, Mail, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Eye, MousePointerClick, Clock, Mail, CheckCircle, Send, ExternalLink } from "lucide-react";
 
 export default function EmailTrackingPage() {
-  const [tracking, setTracking] = useState<any[]>([]);
+  const [emails, setEmails] = useState<any[]>([]);
+  const [stats, setStats] = useState({ opened: 0, clicked: 0, sent: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/analytics").then(r => r.json()).then(d => {
-      // We'll show email tracks from the analytics overview
-      setTracking([]);
-    }).finally(() => setLoading(false));
+    // Fetch email tracking data from applications
+    Promise.all([
+      fetch("/api/automation").then(r => r.json()),
+      fetch("/api/analytics").then(r => r.json()),
+    ])
+      .then(([appsData, analyticsData]) => {
+        if (appsData.applications) {
+          const sentEmails = appsData.applications
+            .filter((a: any) => a.sentAt || a.emailBody)
+            .map((a: any) => ({
+              id: a.id,
+              recipient: a.job?.company || "Recruiter",
+              jobTitle: a.job?.title || "Position",
+              subject: `Application for ${a.job?.title || "Position"} at ${a.job?.company || "Company"}`,
+              status: a.status,
+              sentAt: a.sentAt ? new Date(a.sentAt).toLocaleString() : "Recently",
+              company: a.job?.company || "Unknown",
+            }));
+          setEmails(sentEmails);
+        }
+        if (analyticsData.overview) {
+          setStats({
+            opened: analyticsData.overview.totalEmailsOpened || 0,
+            clicked: analyticsData.overview.totalEmailsClicked || 0,
+            sent: analyticsData.overview.totalApplications || 0,
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -21,29 +49,83 @@ export default function EmailTrackingPage() {
         <p className="text-muted-foreground">Track when recruiters open and click your emails</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-card/50 backdrop-blur">
+          <CardContent className="p-4 text-center">
+            <Send className="w-8 h-8 mx-auto text-violet-500 mb-2" />
+            <p className="text-3xl font-bold">{stats.sent}</p>
+            <p className="text-sm text-muted-foreground">Emails Sent</p>
+          </CardContent>
+        </Card>
         <Card className="bg-card/50 backdrop-blur">
           <CardContent className="p-4 text-center">
             <Eye className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-            <p className="text-3xl font-bold">—</p>
+            <p className="text-3xl font-bold">{stats.opened}</p>
             <p className="text-sm text-muted-foreground">Emails Opened</p>
           </CardContent>
         </Card>
         <Card className="bg-card/50 backdrop-blur">
           <CardContent className="p-4 text-center">
             <MousePointerClick className="w-8 h-8 mx-auto text-green-500 mb-2" />
-            <p className="text-3xl font-bold">—</p>
+            <p className="text-3xl font-bold">{stats.clicked}</p>
             <p className="text-sm text-muted-foreground">Links Clicked</p>
           </CardContent>
         </Card>
         <Card className="bg-card/50 backdrop-blur">
           <CardContent className="p-4 text-center">
-            <Clock className="w-8 h-8 mx-auto text-orange-500 mb-2" />
-            <p className="text-3xl font-bold">—</p>
-            <p className="text-sm text-muted-foreground">Avg. Response Time</p>
+            <CheckCircle className="w-8 h-8 mx-auto text-emerald-500 mb-2" />
+            <p className="text-3xl font-bold">{stats.sent > 0 ? Math.round((stats.opened / stats.sent) * 100) : 0}%</p>
+            <p className="text-sm text-muted-foreground">Open Rate</p>
           </CardContent>
         </Card>
       </div>
+
+      {loading ? (
+        <Card><CardContent className="p-8 text-center text-muted-foreground">Loading email data...</CardContent></Card>
+      ) : emails.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Mail className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No emails sent yet</h3>
+            <p className="text-sm text-muted-foreground">Swipe right on jobs to auto-send application emails to recruiters</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="bg-card/50 backdrop-blur">
+          <CardHeader><CardTitle className="flex items-center gap-2"><Send className="w-5 h-5 text-orange-500" /> Sent Applications</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {emails.map((email: any) => (
+                <div key={email.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center text-sm font-bold text-violet-600">
+                      {email.company?.[0] || "?"}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{email.jobTitle}</p>
+                      <p className="text-xs text-muted-foreground">{email.company} · Sent {email.sentAt}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge className={`text-xs ${
+                      email.status === "VIEWED" ? "bg-blue-100 text-blue-700" :
+                      email.status === "RESPONDED" ? "bg-green-100 text-green-700" :
+                      email.status === "INTERVIEW" ? "bg-emerald-100 text-emerald-700" :
+                      "bg-violet-100 text-violet-700"
+                    }`}>
+                      {email.status === "SENT" ? "📧 Sent" :
+                       email.status === "VIEWED" ? "👁️ Viewed" :
+                       email.status === "RESPONDED" ? "💬 Replied" :
+                       email.status === "INTERVIEW" ? "🎯 Interview" :
+                       email.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="bg-card/50 backdrop-blur">
         <CardHeader><CardTitle className="flex items-center gap-2"><Mail className="w-5 h-5 text-orange-500" />How Email Tracking Works</CardTitle></CardHeader>
@@ -66,28 +148,6 @@ export default function EmailTrackingPage() {
           </div>
         </CardContent>
       </Card>
-
-      {tracking.length > 0 && (
-        <Card className="bg-card/50 backdrop-blur">
-          <CardHeader><CardTitle>Recent Activity</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {tracking.map((t, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{t.recipientEmail}</p>
-                    <p className="text-xs text-muted-foreground">{t.subject}</p>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span className="flex items-center gap-1"><Eye className="w-4 h-4" />{t.openCount}</span>
-                    <span className="flex items-center gap-1"><MousePointerClick className="w-4 h-4" />{t.clickCount}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

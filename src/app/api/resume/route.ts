@@ -51,13 +51,11 @@ export async function POST(req: NextRequest) {
     if (file.type === "application/pdf") {
       try {
         const pdfParseModule = await import("pdf-parse");
-        const { PDFParse } = pdfParseModule as any;
-        const parser = new PDFParse({ data: new Uint8Array(buffer) });
-        const result = await parser.getText();
+        const pdfFn = pdfParseModule.default || pdfParseModule;
+        const result = await pdfFn(new Uint8Array(buffer));
         rawText = typeof result === "string" ? result : result?.text || "";
       } catch (e) {
         console.error("PDF parse error:", e);
-        // Fallback: try to extract readable text
         rawText = buffer.toString("utf-8").replace(/[^ -~\n]/g, " ");
       }
     } else if (file.type.includes("wordprocessingml")) {
