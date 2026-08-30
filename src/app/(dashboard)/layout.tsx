@@ -78,10 +78,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0c] flex">
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col border-r bg-white dark:bg-gray-900 transition-all duration-300 ${collapsed ? "w-[68px]" : "w-64"}`}>
-        <div className="h-16 flex items-center px-4 border-b">
+      <aside className={`hidden lg:flex flex-col border-r border-gray-200 dark:border-[#1c1c1f] bg-white dark:bg-[#111114] transition-all duration-300 ${collapsed ? "w-[68px]" : "w-64"}`}>
+        <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-[#1c1c1f]">
           <Logo size="sm" showText={!collapsed} />
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const isActive = pathname === item.href;
             return (
               <Link key={item.href} href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400" : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"}`}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" : "text-gray-600 hover:bg-gray-100 dark:text-[#8a8a8e] dark:hover:bg-[#1c1c1f]"}`}
                 title={collapsed ? item.label : undefined}>
                 <item.icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <><span className="flex-1">{item.label}</span>{"badge" in item && item.badge && <span className="text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}</>}
@@ -99,8 +99,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
         <div className="p-3 border-t space-y-1">
           <button onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
-            {collapsed ? <ChevronRight className="h-5 w-5 shrink-0" /> : <><ChevronLeft className="h-5 w-5 shrink-0" /><span>Collapse</span></>}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 dark:text-[#8a8a8e] dark:hover:bg-[#1c1c1f]">              {collapsed ? <ChevronRight className="h-4 w-4 shrink-0" /> : <><ChevronLeft className="h-4 w-4 shrink-0" /><span>Collapse</span></>}
           </button>
         </div>
       </aside>
@@ -109,8 +108,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-900 shadow-xl overflow-y-auto">
-            <div className="h-16 flex items-center justify-between px-4 border-b">
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-[#111114] shadow-xl overflow-y-auto">
+            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-[#1c1c1f]">
               <Logo size="sm" />
               <button onClick={() => setMobileOpen(false)} className="text-gray-500"><ChevronLeft className="h-5 w-5" /></button>
             </div>
@@ -119,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 const isActive = pathname === item.href;
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-violet-50 text-violet-700" : "text-gray-600 hover:bg-gray-100"}`}>
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" : "text-gray-600 hover:bg-gray-100 dark:text-[#8a8a8e] dark:hover:bg-[#1c1c1f]"}`}>
                     <item.icon className="h-5 w-5 shrink-0" /><span>{item.label}</span>{"badge" in item && item.badge && <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}
                   </Link>
                 );
@@ -131,7 +130,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b bg-white dark:bg-gray-900 flex items-center px-4 gap-4">
+        <header className="h-16 border-b border-gray-200 dark:border-[#1c1c1f] bg-white dark:bg-[#111114] flex items-center px-4 gap-4">
           <button onClick={() => setMobileOpen(true)} className="lg:hidden text-gray-500">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -140,17 +139,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="flex-1 max-w-md relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input placeholder="Search jobs, applications..." className="pl-10 bg-gray-100 border-0 dark:bg-gray-800" />
+            <Input placeholder="Search jobs, applications..." className="pl-10 bg-gray-100 border-0 dark:bg-[#1c1c1f] dark:text-[#e5e5e7]" />
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
             <Link href="/settings">
-              <Badge className="bg-gradient-to-r from-violet-500 to-indigo-500 text-white hidden sm:flex cursor-pointer hover:opacity-90">
+              <Badge className="bg-blue-600 text-white hidden sm:flex cursor-pointer hover:bg-blue-700">
                 <Zap className="h-3 w-3 mr-1" /> Free Plan
               </Badge>
             </Link>
 
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <Button variant="ghost" size="icon" onClick={toggleTheme} className="text-gray-500 hover:text-gray-700 dark:text-[#8a8a8e] dark:hover:text-white">
               {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
 
@@ -160,9 +159,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Button>
 
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-2 py-1 cursor-pointer">
+              <DropdownMenuTrigger className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-[#1c1c1f] rounded-lg px-2 py-1 cursor-pointer">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-indigo-500 text-white text-sm">
+                  <AvatarFallback className="bg-blue-600 text-white text-sm">
                     {user?.initials || "U"}
                   </AvatarFallback>
                 </Avatar>
