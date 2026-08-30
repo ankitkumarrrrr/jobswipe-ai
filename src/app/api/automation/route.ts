@@ -8,7 +8,7 @@ import {
   customizeResumeForJob,
   generateCoverLetter,
 } from "@/lib/ai/automation";
-import { sendApplicationEmail } from "@/lib/email";
+import { sendApplicationEmailResend } from "@/lib/email-resend";
 import type { ParsedResume } from "@/lib/ai/resume-parser";
 
 export async function POST(req: NextRequest) {
@@ -31,11 +31,25 @@ export async function POST(req: NextRequest) {
       prisma.subscription.findUnique({ where: { userId: session.user.id } }),
     ]);
 
-    if (!resume?.parsedData) {
-      return NextResponse.json({ error: "Please upload and parse your resume first" }, { status: 400 });
+    // Allow application even without resume - use basic user data
+    let resumeData: ParsedResume;
+    if (resume?.parsedData) {
+      resumeData = JSON.parse(resume.parsedData as string);
+    } else {
+      // Create basic resume data from user profile
+      const profile = await prisma.userProfile.findUnique({ where: { userId: session.user.id } });
+      resumeData = {
+        name: user?.name || "Job Applicant",
+        email: user?.email || "",
+        phone: profile?.phone || "",
+        location: profile?.location || "",
+        summary: profile?.goals || `Interested in the ${jobTitle} position at ${company}.`,
+        skills: profile?.skills ? JSON.parse(profile.skills as string) : [],
+        experience: profile?.experience ? JSON.parse(profile.experience as string) : [],
+        education: profile?.education ? JSON.parse(profile.education as string) : [],
+        goals: profile?.goals || "",
+      };
     }
-
-    const resumeData: ParsedResume = JSON.parse(resume.parsedData as string);
 
     // Check subscription limits
     if (subscription && subscription.applicationsLimit !== -1) {
@@ -105,7 +119,7 @@ export async function POST(req: NextRequest) {
         emailBody = `Dear ${contact.name || "Hiring Manager"},\n\nI am writing to express my strong interest in the ${jobTitle} position at ${company}. With my background in ${resumeData.skills.slice(0, 3).join(", ")}, I believe I can make a meaningful contribution to your team.\n\n${resumeData.summary}\n\nI would welcome the opportunity to discuss this role further.\n\nBest regards,\n${resumeData.name}\n${resumeData.email}`;
       }
 
-      // AUTO-SEND email to recruiter (from user's own email)
+      // AUTO-SEND email to recruiter via Resend
       let emailSent = false;
       if (contact.email) {
         try {
@@ -134,20 +148,25 @@ export async function POST(req: NextRequest) {
           
           const resumeBuffer = Buffer.from(resumeText, "utf-8");
           
-          emailSent = await sendApplicationEmail(
-            contact.email,
-            contact.name,
-            emailSubject,
-            emailBody,
-            resumeData.name,
-            user?.email || resumeData.email,
-            resumeBuffer
-          );
+          const result = await sendApplicationEmailResend({
+            fromName: resumeData.name,
+            fromEmail: user?.email || resumeData.email,
+            toEmail: contact.email,
+            jobTitle,
+            companyName: company,
+            coverLetter: emailBody,
+            resumeBuffer,
+            resumeFileName: `${resumeData.name.replace(/\s+/g, "_")}_Resume.pdf`,
+          });
+          
+          emailSent = result.success;
           if (emailSent) {
-            console.log(`✅ Email sent to ${contact.email} at ${company} from ${user?.email}`);
+            console.log(`✅ Email sent to ${contact.email} at ${company} from ${user?.email} via ${result.provider}`);
+          } else {
+            console.log(`❌ Email failed to ${contact.email}: ${result.error}`);
           }
         } catch (e) {
-          console.log(`Email sending failed for ${contact.email}:`, (e as Error).message);
+          console.error(`Email sending exception for ${contact.email}:`, e);
         }
       }
 

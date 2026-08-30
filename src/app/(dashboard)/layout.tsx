@@ -10,6 +10,7 @@ import {
   Sparkles, Target, BellRing, ExternalLink, GitBranch, Phone,
   GraduationCap, Brain,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -72,7 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router]);
 
   const handleSignOut = async () => {
-    await fetch("/api/auth/signout", { method: "POST" });
+    await signOut({ redirect: false });
     window.location.href = "/login";
   };
 
