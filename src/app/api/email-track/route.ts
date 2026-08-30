@@ -4,27 +4,54 @@ import { auth } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-// GET - Track email open (1x1 pixel)
+// GET - List tracked emails for user, OR track email open (1x1 pixel)
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const trackId = url.searchParams.get('id');
 
+    // If tracking pixel request (has id param)
     if (trackId) {
       await prisma.emailTrack.update({
         where: { trackingId: trackId },
         data: { openedAt: new Date(), openCount: { increment: 1 } },
       }).catch(() => {});
+
+      // Return 1x1 transparent pixel
+      const pixel = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
+      return new NextResponse(pixel, {
+        headers: { 'Content-Type': 'image/gif', 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+      });
     }
 
-    // Return 1x1 transparent pixel
-    const pixel = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
-    return new NextResponse(pixel, {
-      headers: { 'Content-Type': 'image/gif', 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+    // Otherwise, list all tracked emails for the current user
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const tracks = await prisma.emailTrack.findMany({
+      where: { userId: session.user.id },
+      include: {
+        application: {
+          include: { job: true },
+        },
+      },
+      orderBy: { sentAt: 'desc' },
+      take: 100,
     });
+
+    const stats = {
+      total: tracks.length,
+      opened: tracks.filter(t => t.openedAt).length,
+      clicked: tracks.filter(t => t.clickedAt).length,
+      openRate: tracks.length > 0 ? Math.round((tracks.filter(t => t.openedAt).length / tracks.length) * 100) : 0,
+    };
+
+    return NextResponse.json({ tracks, stats });
   } catch (error) {
-    const pixel = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', 'base64');
-    return new NextResponse(pixel, { headers: { 'Content-Type': 'image/gif' } });
+    console.error('Email track fetch error:', error);
+    return NextResponse.json({ tracks: [], stats: { total: 0, opened: 0, clicked: 0, openRate: 0 } });
   }
 }
 

@@ -143,11 +143,13 @@ If a field is not found, use an empty string for strings, empty array for arrays
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const pdfParseModule = await import("pdf-parse");
-    const pdfFn = pdfParseModule.default || pdfParseModule;
-    const result = await pdfFn(new Uint8Array(buffer));
-    return typeof result === "string" ? result : result?.text || "";
-  } catch {
+    const { PDFParse } = await import("pdf-parse");
+    const parser = new PDFParse();
+    await parser.load(new Uint8Array(buffer));
+    const text = await parser.getText();
+    return text || "";
+  } catch (e) {
+    console.warn("PDF parse failed, falling back to raw text:", e);
     return buffer.toString("utf-8").replace(/[^ -~\n]/g, " ");
   }
 }

@@ -10,31 +10,29 @@ export default function EmailTrackingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch email tracking data from applications
-    Promise.all([
-      fetch("/api/automation").then(r => r.json()),
-      fetch("/api/analytics").then(r => r.json()),
-    ])
-      .then(([appsData, analyticsData]) => {
-        if (appsData.applications) {
-          const sentEmails = appsData.applications
-            .filter((a: any) => a.sentAt || a.emailBody)
-            .map((a: any) => ({
-              id: a.id,
-              recipient: a.job?.company || "Recruiter",
-              jobTitle: a.job?.title || "Position",
-              subject: `Application for ${a.job?.title || "Position"} at ${a.job?.company || "Company"}`,
-              status: a.status,
-              sentAt: a.sentAt ? new Date(a.sentAt).toLocaleString() : "Recently",
-              company: a.job?.company || "Unknown",
-            }));
+    // Fetch email tracking data from dedicated endpoint
+    fetch("/api/email-track")
+      .then(r => r.json())
+      .then((data) => {
+        if (data.tracks) {
+          const sentEmails = data.tracks.map((t: any) => ({
+            id: t.id,
+            recipient: t.recipientEmail,
+            jobTitle: t.application?.job?.title || "Position",
+            subject: t.subject,
+            status: t.openedAt ? "OPENED" : t.clickedAt ? "CLICKED" : "SENT",
+            sentAt: t.sentAt ? new Date(t.sentAt).toLocaleString() : "Recently",
+            company: t.application?.job?.company || "Unknown",
+            openCount: t.openCount || 0,
+            clickCount: t.clickCount || 0,
+          }));
           setEmails(sentEmails);
         }
-        if (analyticsData.overview) {
+        if (data.stats) {
           setStats({
-            opened: analyticsData.overview.totalEmailsOpened || 0,
-            clicked: analyticsData.overview.totalEmailsClicked || 0,
-            sent: analyticsData.overview.totalApplications || 0,
+            opened: data.stats.opened || 0,
+            clicked: data.stats.clicked || 0,
+            sent: data.stats.total || 0,
           });
         }
       })
@@ -103,20 +101,20 @@ export default function EmailTrackingPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">{email.jobTitle}</p>
-                      <p className="text-xs text-muted-foreground">{email.company} · Sent {email.sentAt}</p>
+                      <p className="text-xs text-muted-foreground">To: {email.recipient} · {email.company} · Sent {email.sentAt}</p>
+                      {email.openCount > 0 && <p className="text-xs text-blue-400">Opened {email.openCount} time{email.openCount > 1 ? 's' : ''}</p>}
+                      {email.clickCount > 0 && <p className="text-xs text-green-400">Clicked {email.clickCount} time{email.clickCount > 1 ? 's' : ''}</p>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge className={`text-xs ${
-                      email.status === "VIEWED" ? "bg-blue-100 text-blue-700" :
-                      email.status === "RESPONDED" ? "bg-green-100 text-green-700" :
-                      email.status === "INTERVIEW" ? "bg-emerald-100 text-emerald-700" :
+                      email.status === "OPENED" ? "bg-blue-100 text-blue-700" :
+                      email.status === "CLICKED" ? "bg-green-100 text-green-700" :
                       "bg-violet-100 text-violet-700"
                     }`}>
                       {email.status === "SENT" ? "📧 Sent" :
-                       email.status === "VIEWED" ? "👁️ Viewed" :
-                       email.status === "RESPONDED" ? "💬 Replied" :
-                       email.status === "INTERVIEW" ? "🎯 Interview" :
+                       email.status === "OPENED" ? "👁️ Opened" :
+                       email.status === "CLICKED" ? "🔗 Clicked" :
                        email.status}
                     </Badge>
                   </div>

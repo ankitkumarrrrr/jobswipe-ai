@@ -50,10 +50,10 @@ export async function POST(req: NextRequest) {
     let rawText = "";
     if (file.type === "application/pdf") {
       try {
-        const pdfParseModule = await import("pdf-parse");
-        const pdfFn = pdfParseModule.default || pdfParseModule;
-        const result = await pdfFn(new Uint8Array(buffer));
-        rawText = typeof result === "string" ? result : result?.text || "";
+        const { PDFParse } = await import("pdf-parse");
+        const parser = new PDFParse();
+        await parser.load(new Uint8Array(buffer));
+        rawText = await parser.getText();
       } catch (e) {
         console.error("PDF parse error:", e);
         rawText = buffer.toString("utf-8").replace(/[^ -~\n]/g, " ");
