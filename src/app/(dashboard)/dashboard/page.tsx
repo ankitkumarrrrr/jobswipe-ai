@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Send, Eye, TrendingUp, Zap, ArrowUpRight,
-  Briefcase, Clock, Target, Upload,
+  Briefcase, Clock, Target, Upload, BarChart3,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +28,12 @@ export default function DashboardPage() {
   const [interviews, setInterviews] = useState(0);
   const [responseRate, setResponseRate] = useState("0%");
   const [appsUsed, setAppsUsed] = useState(0);
+  const [subscriptionPlan, setSubscriptionPlan] = useState("FREE");
+  const [appsLimit, setAppsLimit] = useState(5);
+  const [monthlyData, setMonthlyData] = useState<{ month: string; apps: number; resp: number }[]>([]);
 
   useEffect(() => {
+    // Fetch applications from real data
     fetch("/api/automation")
       .then((r) => r.json())
       .then((data) => {
@@ -53,6 +57,36 @@ export default function DashboardPage() {
             date: new Date(a.createdAt).toLocaleDateString(),
             match: 85,
           })));
+
+          // Build real monthly data from applications
+          const now = new Date();
+          const months: { month: string; apps: number; resp: number }[] = [];
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthName = d.toLocaleString("default", { month: "short" });
+            const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+            const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+            const monthApps = apps.filter((a: any) => {
+              const created = new Date(a.createdAt);
+              return created >= monthStart && created <= monthEnd;
+            });
+            const monthResp = monthApps.filter((a: any) =>
+              ["VIEWED", "RESPONDED", "INTERVIEW"].includes(a.status)
+            );
+            months.push({ month: monthName, apps: monthApps.length, resp: monthResp.length });
+          }
+          setMonthlyData(months);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch subscription data
+    fetch("/api/payments")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.plan) {
+          setSubscriptionPlan(data.plan);
+          setAppsLimit(data.applicationsLimit || 5);
         }
       })
       .catch(() => {});
@@ -63,9 +97,6 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
-  const monthlyData = ["Jan","Feb","Mar","Apr","May","Jun"].map((m, i) => ({
-    month: m, apps: Math.max(1, Math.floor(3 + i * 4)), resp: Math.max(0, Math.floor(1 + i * 2)),
-  }));
   const maxH = Math.max(...monthlyData.map((d) => d.apps), 1);
 
   return (
@@ -96,21 +127,31 @@ export default function DashboardPage() {
             <Badge variant="outline">Last 6 months</Badge>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end gap-3 h-48">
-              {monthlyData.map((d, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <div className="w-full flex flex-col items-center gap-1">
-                    <div className="w-full bg-gradient-to-t from-violet-500 to-indigo-400 rounded-t-md" style={{ height: `${(d.apps / maxH) * 140}px` }} />
-                    <div className="w-full bg-gradient-to-t from-emerald-500 to-teal-400 rounded-t-md" style={{ height: `${(d.resp / maxH) * 140}px` }} />
-                  </div>
-                  <span className="text-xs text-gray-500">{d.month}</span>
+            {monthlyData.every(d => d.apps === 0) ? (
+              <div className="flex flex-col items-center justify-center h-48 text-gray-400">
+                <BarChart3 className="h-8 w-8 mb-2" />
+                <p className="text-sm">No applications yet</p>
+                <p className="text-xs">Start applying to see your progress here</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-end gap-3 h-48">
+                  {monthlyData.map((d, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                      <div className="w-full flex flex-col items-center gap-1">
+                        <div className="w-full bg-gradient-to-t from-violet-500 to-indigo-400 rounded-t-md" style={{ height: `${maxH > 0 ? (d.apps / maxH) * 140 : 0}px` }} />
+                        <div className="w-full bg-gradient-to-t from-emerald-500 to-teal-400 rounded-t-md" style={{ height: `${maxH > 0 ? (d.resp / maxH) * 140 : 0}px` }} />
+                      </div>
+                      <span className="text-xs text-gray-500">{d.month}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="flex items-center justify-center gap-6 text-xs mt-4">
-              <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-sm bg-gradient-to-r from-violet-500 to-indigo-400" /><span className="text-gray-500">Applications</span></div>
-              <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-sm bg-gradient-to-r from-emerald-500 to-teal-400" /><span className="text-gray-500">Responses</span></div>
-            </div>
+                <div className="flex items-center justify-center gap-6 text-xs mt-4">
+                  <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-sm bg-gradient-to-r from-violet-500 to-indigo-400" /><span className="text-gray-500">Applications</span></div>
+                  <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-sm bg-gradient-to-r from-emerald-500 to-teal-400" /><span className="text-gray-500">Responses</span></div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -119,19 +160,19 @@ export default function DashboardPage() {
           <CardContent className="space-y-4">
             <div className="text-center py-4">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                <Zap className="h-4 w-4" /> Free Plan
+                <Zap className="h-4 w-4" /> {subscriptionPlan} Plan
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-500">Applications Used</span>
-                <span className="font-medium">{appsUsed} / 3</span>
+                <span className="font-medium">{appsUsed} / {appsLimit === -1 ? "∞" : appsLimit}</span>
               </div>
-              <Progress value={Math.min(100, Math.round((appsUsed / 3) * 100))} className="h-2" />
+              <Progress value={appsLimit === -1 ? 5 : Math.min(100, Math.round((appsUsed / appsLimit) * 100))} className="h-2" />
             </div>
             <div className="text-center">
-              <p className="text-xs text-gray-500 mb-3">Upgrade to Basic for 100 applications/month</p>
-              <Link href="/settings"><Button className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm">Upgrade Plan</Button></Link>
+              <p className="text-xs text-gray-500 mb-3">{subscriptionPlan === "FREE" ? "Upgrade to Basic for 100 applications/month" : subscriptionPlan === "BASIC" ? "Upgrade to Premium for unlimited applications" : "You're on the best plan!"}</p>
+              {subscriptionPlan === "FREE" && <Link href="/settings"><Button className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm">Upgrade Plan</Button></Link>}
             </div>
           </CardContent>
         </Card>
