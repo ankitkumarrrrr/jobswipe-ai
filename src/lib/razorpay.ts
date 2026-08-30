@@ -41,6 +41,14 @@ export const PLANS: Record<string, SubscriptionPlan> = {
     interval: 1,
     description: "Unlimited applications with priority matching",
   },
+  TEAM: {
+    id: "team_monthly",
+    name: "Team Plan",
+    amount: 199900,
+    currency: "INR",
+    interval: 1,
+    description: "5 team members with unlimited applications",
+  },
 };
 
 export async function createRazorpayOrder(planId: string, userId: string) {
