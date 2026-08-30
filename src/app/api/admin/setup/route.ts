@@ -44,10 +44,12 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
-      // Update existing user to admin
+      // Update existing user to admin + update password
+      const bcrypt = await import("bcryptjs");
+      const passwordHash = await bcrypt.hash(password, 12);
       await prisma.user.update({
         where: { id: user.id },
-        data: { role: "admin" },
+        data: { role: "admin", passwordHash },
       });
     }
 
