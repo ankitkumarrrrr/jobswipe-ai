@@ -184,8 +184,12 @@ export default function JobsPage() {
   };
 
   const allJobs = realJobs;
+  // Filter out already-applied companies AND swiped jobs
+  const appliedCompanies = new Set(
+    allJobs.filter(j => likedJobs.includes(j.id)).map(j => j.company?.toLowerCase())
+  );
   const availableJobs = allJobs.filter(
-    (j) => !likedJobs.includes(j.id) && !dislikedJobs.includes(j.id)
+    (j) => !likedJobs.includes(j.id) && !dislikedJobs.includes(j.id) && !appliedCompanies.has(j.company?.toLowerCase())
   );
 
   const handleSwipe = useCallback(

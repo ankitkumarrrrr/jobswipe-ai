@@ -124,71 +124,8 @@ export async function sendApplicationEmailResend(
     };
   }
 
-  // Determine sender — use Resend free domain if custom domain not verified
-  const customDomain = process.env.EMAIL_SENDING_DOMAIN;
-  let fromAddress: string;
-  if (customDomain && customDomain !== "resend.dev") {
-    fromAddress = `${opts.fromName} <applications@${customDomain}>`;
-  } else {
-    // Use Resend free domain — works immediately, no DNS setup needed
-    fromAddress = `${opts.fromName} via JobSwipe <onboarding@resend.dev>`;
-  }
-
-  // Try Resend first
-  const resend = getResend();
-  if (resend) {
-    try {
-      const emailHtml = buildApplicationEmailHtml({
-        userName: opts.fromName,
-        userEmail: opts.fromEmail,
-        jobTitle: opts.jobTitle,
-        companyName: opts.companyName,
-        coverLetter: opts.coverLetter,
-        resumeUrl: opts.resumeUrl,
-      });
-
-      const result = await resend.emails.send({
-        from: fromAddress,
-        to: opts.toEmail,
-        replyTo: opts.fromEmail, // Replies go directly to user
-        subject: `Application for ${opts.jobTitle} — ${opts.fromName}`,
-        html: emailHtml,
-        headers: {
-          "X-Entity-Ref-ID": `jobswipe-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        },
-        tags: [
-          { name: "category", value: "job_application" },
-          { name: "company", value: opts.companyName },
-        ],
-        attachments: opts.resumeBuffer
-          ? [
-              {
-                filename: opts.resumeFileName || `${opts.fromName.replace(/\s+/g, "_")}_Resume.pdf`,
-                content: opts.resumeBuffer.toString("base64"),
-              },
-            ]
-          : undefined,
-      });
-
-      if (result.error) {
-        console.error("Resend error:", result.error);
-        // Fall through to SMTP fallback
-      } else {
-        console.log(`✅ Resend email sent to ${opts.toEmail} for ${opts.jobTitle} at ${opts.companyName}`);
-        return {
-          success: true,
-          emailId: result.data?.id,
-          provider: "resend",
-          remaining: rateLimit.remaining,
-        };
-      }
-    } catch (err: any) {
-      console.error("Resend send failed:", err.message);
-      // Fall through to SMTP fallback
-    }
-  }
-
-  // SMTP fallback (existing Nodemailer setup)
+  // SMTP FIRST (can send to anyone), Resend as backup (free tier = own email only)
+  // Try SMTP first — it can send to ANY recruiter email
   try {
     const { sendEmail } = await import("@/lib/email");
     const htmlBody = buildApplicationEmailHtml({
@@ -217,17 +154,65 @@ export async function sendApplicationEmailResend(
     });
 
     if (sent) {
-      console.log(`✅ SMTP email sent to ${opts.toEmail} for ${opts.jobTitle}`);
+      console.log(`✅ SMTP email sent to ${opts.toEmail} for ${opts.jobTitle} at ${opts.companyName}`);
       return { success: true, provider: "smtp", remaining: rateLimit.remaining };
     }
   } catch (err: any) {
-    console.error("SMTP fallback failed:", err.message);
+    console.error("SMTP send failed, trying Resend:", err.message);
+  }
+
+  // Resend fallback (only works for own email on free tier)
+  const resend = getResend();
+  if (resend) {
+    const customDomain = process.env.EMAIL_SENDING_DOMAIN;
+    const fromAddress = (customDomain && customDomain !== "resend.dev")
+      ? `${opts.fromName} <applications@${customDomain}>`
+      : `${opts.fromName} via JobSwipe <onboarding@resend.dev>`;
+
+    try {
+      const emailHtml = buildApplicationEmailHtml({
+        userName: opts.fromName,
+        userEmail: opts.fromEmail,
+        jobTitle: opts.jobTitle,
+        companyName: opts.companyName,
+        coverLetter: opts.coverLetter,
+        resumeUrl: opts.resumeUrl,
+      });
+
+      const result = await resend.emails.send({
+        from: fromAddress,
+        to: opts.toEmail,
+        replyTo: opts.fromEmail,
+        subject: `Application for ${opts.jobTitle} — ${opts.fromName}`,
+        html: emailHtml,
+        headers: {
+          "X-Entity-Ref-ID": `jobswipe-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        },
+        tags: [
+          { name: "category", value: "job_application" },
+          { name: "company", value: opts.companyName },
+        ],
+        attachments: opts.resumeBuffer
+          ? [{
+              filename: opts.resumeFileName || `${opts.fromName.replace(/\s+/g, "_")}_Resume.pdf`,
+              content: opts.resumeBuffer.toString("base64"),
+            }]
+          : undefined,
+      });
+
+      if (!result.error) {
+        console.log(`✅ Resend email sent to ${opts.toEmail} for ${opts.jobTitle}`);
+        return { success: true, emailId: result.data?.id, provider: "resend", remaining: rateLimit.remaining };
+      }
+    } catch (err: any) {
+      console.error("Resend fallback failed:", err.message);
+    }
   }
 
   return {
     success: false,
-    provider: resend ? "resend" : "smtp",
-    error: "Email sending failed. Please check your email configuration.",
+    provider: "smtp",
+    error: "Email sending failed. Check SMTP configuration.",
     remaining: rateLimit.remaining,
   };
 }

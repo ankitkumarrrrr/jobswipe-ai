@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, MousePointerClick, Clock, Mail, CheckCircle, Send, ExternalLink } from "lucide-react";
+import { Eye, MousePointerClick, Clock, Mail, CheckCircle, Send, ExternalLink, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function EmailTrackingPage() {
   const [emails, setEmails] = useState<any[]>([]);
@@ -10,31 +11,68 @@ export default function EmailTrackingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch email tracking data from dedicated endpoint
-    fetch("/api/email-track")
-      .then(r => r.json())
-      .then((data) => {
-        if (data.tracks) {
-          const sentEmails = data.tracks.map((t: any) => ({
-            id: t.id,
-            recipient: t.recipientEmail,
-            jobTitle: t.application?.job?.title || "Position",
-            subject: t.subject,
-            status: t.openedAt ? "OPENED" : t.clickedAt ? "CLICKED" : "SENT",
-            sentAt: t.sentAt ? new Date(t.sentAt).toLocaleString() : "Recently",
-            company: t.application?.job?.company || "Unknown",
-            openCount: t.openCount || 0,
-            clickCount: t.clickCount || 0,
-          }));
-          setEmails(sentEmails);
+    // Fetch from BOTH email tracking AND applications (for complete picture)
+    Promise.allSettled([
+      fetch("/api/email-track").then(r => r.json()),
+      fetch("/api/automation").then(r => r.json()),
+    ])
+      .then(([trackResult, appsResult]) => {
+        const allEmails: any[] = [];
+        
+        // 1. Add tracked emails (with open/click data)
+        if (trackResult.status === "fulfilled" && trackResult.value.tracks) {
+          for (const t of trackResult.value.tracks) {
+            allEmails.push({
+              id: t.id,
+              recipient: t.recipientEmail,
+              jobTitle: t.application?.job?.title || "Position",
+              subject: t.subject,
+              status: t.openedAt ? "OPENED" : t.clickedAt ? "CLICKED" : "SENT",
+              sentAt: t.sentAt ? new Date(t.sentAt).toLocaleString() : "Recently",
+              company: t.application?.job?.company || "Unknown",
+              openCount: t.openCount || 0,
+              clickCount: t.clickCount || 0,
+              source: "tracked",
+            });
+          }
         }
-        if (data.stats) {
-          setStats({
-            opened: data.stats.opened || 0,
-            clicked: data.stats.clicked || 0,
-            sent: data.stats.total || 0,
-          });
+        
+        // 2. Add applications with emailBody (sent via SMTP, may not have tracking)
+        if (appsResult.status === "fulfilled" && appsResult.value.applications) {
+          for (const a of appsResult.value.applications) {
+            if (a.sentAt || a.emailBody) {
+              // Check if already in tracked list
+              if (!allEmails.some(e => e.id === a.id)) {
+                allEmails.push({
+                  id: a.id,
+                  recipient: a.job?.company ? `HR at ${a.job.company}` : "Recruiter",
+                  jobTitle: a.job?.title || "Position",
+                  subject: `Application for ${a.job?.title || "Position"}`,
+                  status: a.status || "SENT",
+                  sentAt: a.sentAt ? new Date(a.sentAt).toLocaleString() : "Recently",
+                  company: a.job?.company || "Unknown",
+                  openCount: 0,
+                  clickCount: 0,
+                  source: "application",
+                });
+              }
+            }
+          }
         }
+        
+        // Sort by most recent first
+        allEmails.sort((a, b) => {
+          if (a.sentAt === "Recently") return -1;
+          if (b.sentAt === "Recently") return 1;
+          return 0;
+        });
+        
+        setEmails(allEmails);
+        setStats({
+          sent: allEmails.length,
+          opened: allEmails.filter(e => e.status === "OPENED").length,
+          clicked: allEmails.filter(e => e.status === "CLICKED").length,
+        });
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -42,9 +80,14 @@ export default function EmailTrackingPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Email Tracking</h1>
-        <p className="text-muted-foreground">Track when recruiters open and click your emails</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Email Tracking</h1>
+          <p className="text-muted-foreground">Track when recruiters open and click your emails</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => { setLoading(true); window.location.reload(); }}>
+          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
