@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
     if (file.type === "application/pdf") {
       try {
         const { PDFParse } = await import("pdf-parse");
-        const parser = new PDFParse();
-        await parser.load(new Uint8Array(buffer));
-        rawText = await parser.getText();
+        const parser = new PDFParse({ data: new Uint8Array(buffer) });
+        const result = await parser.getText();
+        rawText = result?.text || "";
       } catch (e) {
         console.error("PDF parse error:", e);
         rawText = buffer.toString("utf-8").replace(/[^ -~\n]/g, " ");

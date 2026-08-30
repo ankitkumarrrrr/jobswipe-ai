@@ -144,10 +144,9 @@ If a field is not found, use an empty string for strings, empty array for arrays
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     const { PDFParse } = await import("pdf-parse");
-    const parser = new PDFParse();
-    await parser.load(new Uint8Array(buffer));
-    const text = await parser.getText();
-    return text || "";
+    const parser = new PDFParse({ data: new Uint8Array(buffer) });
+    const result = await parser.getText();
+    return result?.text || "";
   } catch (e) {
     console.warn("PDF parse failed, falling back to raw text:", e);
     return buffer.toString("utf-8").replace(/[^ -~\n]/g, " ");
