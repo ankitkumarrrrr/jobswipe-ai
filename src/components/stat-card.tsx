@@ -18,8 +18,8 @@ export default function StatCard({
   change,
   changeType = "neutral",
   icon: Icon,
-  iconColor = "text-violet-500",
-  iconBg = "bg-violet-100 dark:bg-violet-500/10",
+  iconColor = "text-blue-500",
+  iconBg = "bg-blue-100 dark:bg-blue-500/10",
 }: StatCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">

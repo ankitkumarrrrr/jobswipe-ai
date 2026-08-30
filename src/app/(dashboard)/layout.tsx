@@ -92,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" : "text-gray-600 hover:bg-gray-100 dark:text-[#8a8a8e] dark:hover:bg-[#1c1c1f]"}`}
                 title={collapsed ? item.label : undefined}>
                 <item.icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <><span className="flex-1">{item.label}</span>{"badge" in item && item.badge && <span className="text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}</>}
+                {!collapsed && <><span className="flex-1">{item.label}</span>{"badge" in item && item.badge && <span className="text-[10px] font-bold bg-gradient-to-r bg-blue-600 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}</>}
               </Link>
             );
           })}
@@ -119,7 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" : "text-gray-600 hover:bg-gray-100 dark:text-[#8a8a8e] dark:hover:bg-[#1c1c1f]"}`}>
-                    <item.icon className="h-5 w-5 shrink-0" /><span>{item.label}</span>{"badge" in item && item.badge && <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}
+                    <item.icon className="h-5 w-5 shrink-0" /><span>{item.label}</span>{"badge" in item && item.badge && <span className="ml-auto text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}
                   </Link>
                 );
               })}
