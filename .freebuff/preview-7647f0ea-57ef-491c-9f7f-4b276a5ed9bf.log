@@ -1,0 +1,16 @@
+▲ Next.js 16.3.3 (Turbopack)
+- Local:         http://localhost:3456
+- Network:       http://192.168.1.22:3456
+- Environments: .env.local
+✓ Ready in 229ms
+✓ Running next.config.ts took 51ms
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+- Experiments (use with caution):
+  · serverActions
+
+[?25h

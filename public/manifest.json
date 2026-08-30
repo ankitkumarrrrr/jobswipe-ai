@@ -1,0 +1,16 @@
+{
+  "name": "JobSwipe AI",
+  "short_name": "JobSwipe",
+  "description": "AI-Powered Job Applications",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0118",
+  "theme_color": "#0a0118",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "256x256",
+      "type": "image/x-icon"
+    }
+  ]
+}

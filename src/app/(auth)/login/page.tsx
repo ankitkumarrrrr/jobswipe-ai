@@ -14,9 +14,17 @@ import { Separator } from "@/components/ui/separator";
 import Logo from "@/components/logo";
 import { toast } from "sonner";
 
-const ThreeBackground = dynamic(() => import("@/components/three-background"), {
-  ssr: false,
-});
+const ThreeBackground = dynamic(
+  () => import("@/components/three-background"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 -z-10 bg-[#0a0118]">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 to-indigo-900/20" />
+      </div>
+    ),
+  }
+);
 
 export default function LoginPage() {
   const router = useRouter();
