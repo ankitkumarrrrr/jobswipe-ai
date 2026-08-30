@@ -8,6 +8,7 @@ import {
   CreditCard, LogOut, Search, Bell, ChevronLeft, ChevronRight,
   Zap, HelpCircle, Sun, Moon, BarChart3, Mail, Users,
   Sparkles, Target, BellRing, ExternalLink, GitBranch, Phone,
+  GraduationCap, Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,8 @@ const navItems = [
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/applications", label: "Applications", icon: Send },
   { href: "/resume", label: "Resume", icon: FileText },
+  { href: "/fresher-resume", label: "Resume Builder", icon: GraduationCap, badge: "NEW" },
+  { href: "/mock-interview", label: "Mock Interview", icon: Brain, badge: "NEW" },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/email-tracking", label: "Email Tracking", icon: Mail },
   { href: "/interview-prep", label: "Interview Prep", icon: Sparkles },
@@ -88,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-400" : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"}`}
                 title={collapsed ? item.label : undefined}>
                 <item.icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span className="flex-1">{item.label}</span>}
+                {!collapsed && <><span className="flex-1">{item.label}</span>{"badge" in item && item.badge && <span className="text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}</>}
               </Link>
             );
           })}
@@ -116,7 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 return (
                   <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? "bg-violet-50 text-violet-700" : "text-gray-600 hover:bg-gray-100"}`}>
-                    <item.icon className="h-5 w-5 shrink-0" /><span>{item.label}</span>
+                    <item.icon className="h-5 w-5 shrink-0" /><span>{item.label}</span>{"badge" in item && item.badge && <span className="ml-auto text-[10px] font-bold bg-gradient-to-r from-violet-500 to-indigo-500 text-white px-1.5 py-0.5 rounded-full">{item.badge}</span>}
                   </Link>
                 );
               })}

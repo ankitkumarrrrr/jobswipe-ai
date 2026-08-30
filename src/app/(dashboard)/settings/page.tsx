@@ -285,7 +285,7 @@ export default function SettingsPage() {
                 { name: "LinkedIn", connected: !!profile.linkedinUrl, icon: "in", note: profile.linkedinUrl ? "Profile URL saved" : "Add LinkedIn URL in Profile" },
                 { name: "Gmail (SMTP)", connected: true, icon: "G", note: "Configured for sending emails" },
                 { name: "Gemini AI", connected: true, icon: "✦", note: "Free tier active" },
-                { name: "Razorpay", connected: false, icon: "R", note: "Add keys in .env.local" },
+                { name: "Razorpay", connected: true, icon: "R", note: "Live mode — accepting real payments" },
                 { name: "Stripe", connected: false, icon: "S", note: "Add keys in .env.local" },
               ].map(service => (
                 <div key={service.name} className="flex items-center justify-between p-3 rounded-lg border">
