@@ -124,9 +124,15 @@ export async function sendApplicationEmailResend(
     };
   }
 
-  // Determine sender domain
-  const senderDomain = process.env.EMAIL_SENDING_DOMAIN || "jobswipe.in";
-  const fromAddress = `${opts.fromName} <applications@${senderDomain}>`;
+  // Determine sender — use Resend free domain if custom domain not verified
+  const customDomain = process.env.EMAIL_SENDING_DOMAIN;
+  let fromAddress: string;
+  if (customDomain && customDomain !== "resend.dev") {
+    fromAddress = `${opts.fromName} <applications@${customDomain}>`;
+  } else {
+    // Use Resend free domain — works immediately, no DNS setup needed
+    fromAddress = `${opts.fromName} via JobSwipe <onboarding@resend.dev>`;
+  }
 
   // Try Resend first
   const resend = getResend();
