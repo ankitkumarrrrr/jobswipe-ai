@@ -186,6 +186,9 @@ export default function ResumePage() {
               </div>
               <div className="flex items-center gap-2">
                 <Badge className="bg-green-100 text-green-700"><Sparkles className="h-3 w-3 mr-1" />Parsed</Badge>
+                <Button variant="outline" size="sm" onClick={() => window.open("/api/resume/download", "_blank")}>
+                  <Download className="h-4 w-4 mr-1" />Download
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => { setUploadState("idle"); setFileName(null); setParsedData(null); }}>
                   <Trash2 className="h-4 w-4 mr-1" />Remove
                 </Button>

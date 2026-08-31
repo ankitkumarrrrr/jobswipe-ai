@@ -97,21 +97,24 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Save resume to database
+    // Save resume to database (with file data as base64 for email attachment)
+    const fileData = buffer.toString("base64");
     const resume = await prisma.resume.upsert({
       where: { userId: user.id },
       update: {
         fileName: file.name,
-        fileUrl: `/uploads/${user.id}/${file.name}`,
+        fileUrl: `/api/resume/download`,
         fileType: file.type,
+        fileData,
         rawText,
         parsedData: JSON.stringify(parsedData),
       },
       create: {
         userId: user.id,
         fileName: file.name,
-        fileUrl: `/uploads/${user.id}/${file.name}`,
+        fileUrl: `/api/resume/download`,
         fileType: file.type,
+        fileData,
         rawText,
         parsedData: JSON.stringify(parsedData),
       },
@@ -174,6 +177,7 @@ export async function GET() {
         fileType: resume.fileType,
         uploadedAt: resume.uploadedAt,
         parsedData: resume.parsedData ? JSON.parse(resume.parsedData as string) : null,
+        hasFile: !!resume.fileData,
       },
     });
   } catch (error) {

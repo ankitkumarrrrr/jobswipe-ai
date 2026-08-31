@@ -64,10 +64,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build resume URL if available
+    // Build resume URL and buffer for attachment
     const resumeUrl = user.resume?.fileUrl || undefined;
+    let resumeBuffer: Buffer | undefined;
+    let resumeFileName: string | undefined;
 
-    // Send the email
+    if (user.resume?.fileData) {
+      resumeBuffer = Buffer.from(user.resume.fileData, "base64");
+      resumeFileName = user.resume.fileName || `${(user.name || "Applicant").replace(/\s+/g, "_")}_Resume.pdf`;
+    }
+
+    // Send the email with resume attached
     const result = await sendApplicationEmailResend({
       fromName: user.name || "Job Applicant",
       fromEmail: user.email,
@@ -76,6 +83,8 @@ export async function POST(req: NextRequest) {
       companyName,
       coverLetter,
       resumeUrl,
+      resumeBuffer,
+      resumeFileName,
     });
 
     if (!result.success) {

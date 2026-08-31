@@ -67,8 +67,8 @@ function buildApplicationEmailHtml(opts: {
         align with ${opts.companyName}'s needs.
       </p>
 
-      ${opts.resumeUrl ? `<p style="margin:0 0 8px 0;">
-        📎 <a href="${opts.resumeUrl}" style="color:#6366f1;">View my resume</a>
+      ${opts.resumeUrl ? `<p style="margin:16px 0 8px 0;">
+        📎 <a href="${opts.resumeUrl.startsWith('http') ? opts.resumeUrl : `https://jobswipe-alpha.vercel.app${opts.resumeUrl}`}" style="color:#6366f1;font-weight:600;">View / Download Resume (PDF attached)</a>
       </p>` : ""}
 
       <p style="margin:24px 0 0 0;">
