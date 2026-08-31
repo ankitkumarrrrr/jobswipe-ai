@@ -25,25 +25,18 @@ export default function LampLoginAnimation() {
     setLampOn(true);
 
     try {
-      const result = await signIn("credentials", {
+      await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: "/dashboard",
       });
-
-      if (result?.error) {
-        setLampOn(false);
-        setIsLoading(false);
-        alert("Login failed: " + result.error);
-      } else {
-        // Wait for cookie to be set, then redirect
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 500);
-      }
+      // signIn with redirect:true handles the redirect server-side
+      // The browser will navigate to /dashboard after cookie is set
     } catch {
       setLampOn(false);
       setIsLoading(false);
+      alert("Login failed. Please try again.");
     }
   };
 

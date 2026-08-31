@@ -49,16 +49,10 @@ export default function RegisterPage() {
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        redirect: true,
+        callbackUrl: "/dashboard",
       });
-
-      if (result?.error) {
-        toast.success("Account created! Please sign in.");
-        window.location.href = "/login";
-      } else {
-        toast.success("Welcome to JobSwipe AI!");
-        window.location.href = "/dashboard";
-      }
+      // signIn with redirect:true handles everything server-side
     } catch {
       toast.error("Something went wrong");
     } finally {
