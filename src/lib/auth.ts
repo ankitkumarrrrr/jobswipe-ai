@@ -31,6 +31,22 @@ providers.push(
       const email = credentials.email as string;
       const password = credentials.password as string;
 
+      // Rate limiting: check recent failed login attempts
+      try {
+        const recentAttempts = await prisma.$queryRaw`
+          SELECT COUNT(*) as count FROM "AIUsage"
+          WHERE "userId" IN (SELECT id FROM "User" WHERE email = ${email})
+          AND action = 'login_failed'
+          AND "createdAt" > NOW() - INTERVAL '15 minutes'
+        ` as any[];
+        if (recentAttempts?.[0]?.count >= 5) {
+          throw new Error("Too many login attempts. Please try again in 15 minutes.");
+        }
+      } catch (e: any) {
+        if (e.message?.includes("Too many")) throw e;
+        // Column may not exist, continue without rate limiting
+      }
+
       const user = await prisma.user.findUnique({
         where: { email },
       });

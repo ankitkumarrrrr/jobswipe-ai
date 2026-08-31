@@ -14,6 +14,8 @@ model User {
   passwordHash  String?
   avatar        String?
   role          String   @default("user")
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

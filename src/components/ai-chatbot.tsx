@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, GripHorizontal } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { MessageCircle, X, Send, Bot, GripHorizontal } from "lucide-react";
 
 interface Message {
   role: "bot" | "user";
@@ -87,6 +88,7 @@ function getResponse(input: string): string {
 
 export default function AiChatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
   const [messages, setMessages] = useState<Message[]>([
     { role: "bot", text: BOT_INFO },
   ]);
@@ -101,6 +103,11 @@ export default function AiChatbot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Auto-close on navigation
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   const handleSend = (text?: string) => {
     const msg = text || input.trim();

@@ -306,7 +306,7 @@ export default function LampLoginAnimation() {
                 Remember me
               </label>
               <a
-                href="#"
+                href="/forgot-password"
                 className="text-amber-400 hover:text-amber-300"
               >
                 Forgot password?

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lamp Login Animation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #030712, #111827, #030712);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Lamp Scene */
+    .lamp-scene {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .lamp-wrapper {
+      margin-top: 30px;
+      opacity: 0;
+      transform: translateY(30px) scale(0.8);
+      animation: lampEnter 0.8s ease-out 0.3s forwards;
+    }
+
+    @keyframes lampEnter {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Light cone */
+    .light-cone {
+      position: absolute;
+      top: 180px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      opacity: 0;
+      transition: all 1.2s ease-out;
+      background: radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.07) 40%, transparent 70%);
+      pointer-events: none;
+    }
+    .light-cone.on {
+      width: 800px;
+      height: 800px;
+      opacity: 1;
+    }
+
+    /* Ambient glow behind lamp */
+    .ambient-glow {
+      position: absolute;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 350px;
+      height: 350px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(251,191,36,0.25) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      filter: blur(40px);
+    }
+    .ambient-glow.on { opacity: 1; }
+
+    /* Bulb glow animation */
+    @keyframes bulbPulse {
+      0%, 100% { filter: drop-shadow(0 0 12px rgba(251,191,36,0.6)); }
+      50% { filter: drop-shadow(0 0 24px rgba(251,191,36,1)); }
+    }
+
+    /* Card */
+    .login-card {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      margin-top: 340px;
+      padding: 0 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: cardEnter 0.7s ease-out 0.6s forwards;
+    }
+
+    @keyframes cardEnter {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-inner {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      transition: box-shadow 0.6s ease;
+    }
+    .card-inner.glow {
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 60px rgba(251,191,36,0.08);
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 4px;
+      transition: all 0.5s ease;
+    }
+    .subtitle {
+      color: #9ca3af;
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      color: #d1d5db;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7280;
+      width: 16px;
+      height: 16px;
+    }
+    .input-wrap input {
+      width: 100%;
+      padding: 10px 40px 10px 40px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .input-wrap input::placeholder { color: #6b7280; }
+    .input-wrap input:focus {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+    }
+
+    .toggle-pw {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .toggle-pw:hover { color: #d1d5db; }
+
+    .extras {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .extras label {
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .extras a {
+      color: #f59e0b;
+      text-decoration: none;
+    }
+    .extras a:hover { color: #fbbf24; }
+
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.5s ease;
+      background: linear-gradient(135deg, #374151, #4b5563);
+    }
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #4b5563, #6b7280);
+    }
+    .submit-btn.lamp-on {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+    }
+    .submit-btn.lamp-on:hover {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      box-shadow: 0 4px 25px rgba(245,158,11,0.4);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: none;
+    }
+    .submit-btn.loading .spinner { display: block; }
+    .submit-btn.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .signup-link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #9ca3af;
+    }
+    .signup-link a {
+      color: #f59e0b;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .signup-link a:hover { color: #fbbf24; }
+
+    /* Floating particles */
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(251,191,36,0.5);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    .particle.on {
+      opacity: 1;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0); }
+      50% { transform: translateY(-25px) translateX(12px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Lamp Scene -->
+  <div class="lamp-scene">
+    <div class="ambient-glow" id="ambientGlow"></div>
+    <div class="light-cone" id="lightCone"></div>
+
+    <!-- Floating particles (spread around the bigger lamp) -->
+    <div class="particle" id="p1" style="top:100px;left:calc(50% - 100px);"></div>
+    <div class="particle" id="p2" style="top:60px;left:calc(50% + 90px);animation-delay:0.5s;"></div>
+    <div class="particle" id="p3" style="top:150px;left:calc(50% - 60px);animation-delay:1s;"></div>
+    <div class="particle" id="p4" style="top:40px;left:calc(50% + 40px);animation-delay:1.5s;"></div>
+    <div class="particle" id="p5" style="top:130px;left:calc(50% + 70px);animation-delay:2s;"></div>
+    <div class="particle" id="p6" style="top:180px;left:calc(50% - 90px);animation-delay:0.7s;"></div>
+    <div class="particle" id="p7" style="top:80px;left:calc(50% + 20px);animation-delay:1.3s;"></div>
+
+    <div class="lamp-wrapper">
+      <!-- 2x bigger SVG: 240x320 instead of 120x160 -->
+      <svg width="240" height="320" viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+        <!-- Lamp shade -->
+        <path id="shade" d="M30 20 L60 2 L90 20 L80 50 L40 50 Z"
+              fill="#374151" stroke="#4b5563" stroke-width="2" style="transition:all 0.5s"/>
+        <!-- Inner glow -->
+        <ellipse id="shadeGlow" cx="60" cy="45" rx="18" ry="8" fill="#fef3c7" opacity="0" style="transition:opacity 0.5s"/>
+        <!-- Bulb -->
+        <circle id="bulb" cx="60" cy="55" r="8" fill="#1f2937" stroke="#374151" stroke-width="1.5" style="transition:all 0.3s"/>
+        <!-- Bulb outer ring -->
+        <circle id="bulbRing" cx="60" cy="55" r="14" fill="none" stroke="#fbbf24" stroke-width="1" opacity="0" style="transition:opacity 0.3s"/>
+        <!-- Bulb outer ring 2 -->
+        <circle id="bulbRing2" cx="60" cy="55" r="20" fill="none" stroke="#fbbf24" stroke-width="0.5" opacity="0" style="transition:opacity 0.5s"/>
+        <!-- Neck -->
+        <line x1="60" y1="63" x2="60" y2="110" stroke="#6b7280" stroke-width="4" stroke-linecap="round"/>
+        <!-- Joint -->
+        <circle cx="60" cy="110" r="5" fill="#4b5563"/>
+        <!-- Arm -->
+        <line x1="60" y1="110" x2="60" y2="130" stroke="#6b7280" stroke-width="4" stroke-linecap="round"/>
+        <!-- Base -->
+        <ellipse cx="60" cy="140" rx="30" ry="8" fill="#374151" stroke="#4b5563" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Login Card -->
+  <div class="login-card">
+    <div class="card-inner" id="cardInner">
+      <h1 id="title">Turn on the light 💡</h1>
+      <p class="subtitle">Sign in to continue your job search</p>
+
+      <form id="loginForm">
+        <div class="field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input type="email" id="email" placeholder="you@example.com" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="password" placeholder="••••••••" required>
+            <button type="button" class="toggle-pw" onclick="togglePw()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="extras">
+          <label><input type="checkbox"> Remember me</label>
+          <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <div class="spinner"></div>
+          <span class="btn-text">Sign In →</span>
+        </button>
+      </form>
+
+      <p class="signup-link">
+        Don&apos;t have an account? <a href="#">Sign up for free</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    let lampOn = false;
+
+    function togglePw() {
+      const pw = document.getElementById('password');
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+    }
+
+    function turnOnLamp() {
+      lampOn = true;
+
+      // Lamp elements
+      document.getElementById('shade').setAttribute('fill', '#fbbf24');
+      document.getElementById('shade').setAttribute('stroke', '#f59e0b');
+      document.getElementById('shadeGlow').setAttribute('opacity', '0.8');
+      document.getElementById('bulb').setAttribute('fill', '#fef08a');
+      document.getElementById('bulb').setAttribute('stroke', '#facc15');
+      document.getElementById('bulbRing').setAttribute('opacity', '0.4');
+      document.getElementById('bulbRing2').setAttribute('opacity', '0.2');
+      document.getElementById('lightCone').classList.add('on');
+      document.getElementById('ambientGlow').classList.add('on');
+
+      // Particles
+      for (let i = 1; i <= 7; i++) {
+        document.getElementById('p' + i).classList.add('on');
+      }
+
+      // Card
+      document.getElementById('cardInner').classList.add('glow');
+      document.getElementById('title').textContent = 'Welcome back! ✨';
+      document.getElementById('submitBtn').classList.add('lamp-on');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      turnOnLamp();
+
+      setTimeout(() => {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
