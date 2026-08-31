@@ -31,32 +31,33 @@ export default function LampLoginAnimation() {
     setLampOn(true);
     setError("");
 
-    // Build a hidden form and submit it directly to NextAuth
-    // This triggers a server-side 302 redirect with Set-Cookie — works on ALL devices
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/api/auth/callback/credentials?callbackUrl=/dashboard";
+    // Wait 1 second so user can see the lamp light up animation before redirecting
+    setTimeout(() => {
+      // Build a hidden form and submit it directly to NextAuth
+      // This triggers a server-side 302 redirect with Set-Cookie — works on ALL devices
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/api/auth/callback/credentials?callbackUrl=/dashboard";
 
-    const fields: Record<string, string> = {
-      csrfToken,
-      email,
-      password,
-      callbackUrl: "/dashboard",
-      redirect: "true",
-    };
+      const fields: Record<string, string> = {
+        csrfToken,
+        email,
+        password,
+        callbackUrl: "/dashboard",
+        redirect: "true",
+      };
 
-    for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
-    }
+      for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      }
 
-    document.body.appendChild(form);
-    form.submit();
-    // The browser will follow the 302 redirect automatically
-    // No JavaScript redirect needed — the server sets the cookie and redirects
+      document.body.appendChild(form);
+      form.submit();
+    }, 1000); // 1 second delay for lamp animation
   };
 
   return (

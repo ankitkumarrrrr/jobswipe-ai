@@ -36,6 +36,9 @@ export default function RegisterPage() {
     setLampOn(true);
     setError("");
 
+    // Wait 1 second so user can see the lamp animation
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     try {
       // Step 1: Register the user
       const res = await fetch("/api/auth/register", {

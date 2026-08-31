@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     let whereClause: any = { isActive: true };
     if (mine && session?.user?.id) {
-      whereClause = { postedBy: session.user.id };
+      whereClause = { postedBy: session.user.id, isActive: true };
     }
 
     const jobs = await prisma.jobPosting.findMany({
@@ -168,9 +168,8 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Not authorized" }, { status: 403 });
     }
 
-    await prisma.jobPosting.update({
+    await prisma.jobPosting.delete({
       where: { id },
-      data: { isActive: false },
     });
 
     return NextResponse.json({ success: true });

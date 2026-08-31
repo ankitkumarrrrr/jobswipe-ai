@@ -105,11 +105,12 @@ export default function PostJobPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this job?")) return;
     try {
       const res = await fetch(`/api/jobs/post?id=${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        toast.success("Job deactivated");
+        toast.success("Job deleted");
         fetchMyJobs();
       }
     } catch (e) {

@@ -20,6 +20,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Logo from "@/components/logo";
+import AiChatbot from "@/components/ai-chatbot";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -182,6 +183,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
+      <AiChatbot />
     </div>
   );
 }
