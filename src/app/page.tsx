@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Logo from "@/components/logo";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 
 
@@ -146,18 +146,91 @@ const plans = [
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [lampOn, setLampOn] = useState(false);
+  const [textVisible, setTextVisible] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setLampOn(true), 300);
+    const t2 = setTimeout(() => setTextVisible(true), 1100);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Background — Lamp Image */}
-      <div className="fixed inset-0 -z-10">
-        <img
-          src="/lamp-hero.webp"
-          alt=""
-          className="w-full h-full object-cover opacity-40"
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a]">
+      {/* Pendant Lamp — upper right */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {/* Light cone from lamp */}
+        <div
+          className={`absolute transition-all duration-[1500ms] ease-out ${
+            lampOn ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            top: 0,
+            right: 0,
+            width: "70vw",
+            height: "90vh",
+            background:
+              "radial-gradient(ellipse at 75% 5%, rgba(255,220,130,0.18) 0%, rgba(255,200,80,0.06) 25%, transparent 55%)",
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/60 via-[#030712]/40 to-[#030712]/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#030712]/80 via-transparent to-[#030712]/80" />
+        {/* Ambient warm glow */}
+        <div
+          className={`absolute transition-opacity duration-1000 ${
+            lampOn ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            top: "3%",
+            right: "8%",
+            width: 300,
+            height: 300,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(255,200,80,0.2) 0%, transparent 70%)",
+            filter: "blur(50px)",
+          }}
+        />
+        {/* Pendant Lamp SVG — larger */}
+        <svg
+          className={`absolute transition-all duration-700 ${
+            lampOn ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ top: 0, right: "8%" }}
+          width="180"
+          height="320"
+          viewBox="0 0 120 220"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Wire */}
+          <line x1="60" y1="0" x2="60" y2="50" stroke="#555" strokeWidth="1.5" />
+          {/* Ceiling plate */}
+          <rect x="48" y="0" width="24" height="7" rx="3" fill="#444" />
+          {/* Socket holder */}
+          <rect x="50" y="45" width="20" height="16" rx="3" fill="#3a3a3a" />
+          {/* Socket rim */}
+          <rect x="47" y="57" width="26" height="5" rx="2" fill="#4a4a4a" />
+          {/* Bulb outer */}
+          <ellipse
+            cx="60" cy="82"
+            rx="18" ry="22"
+            fill={lampOn ? "#ffeaa7" : "#2a2a2a"}
+            style={{ transition: "fill 0.8s ease" }}
+          />
+          {/* Bulb inner glow */}
+          {lampOn && (
+            <ellipse cx="60" cy="78" rx="10" ry="12" fill="#fff3c4" opacity="0.7" />
+          )}
+          {/* Bulb highlight */}
+          {lampOn && (
+            <ellipse cx="55" cy="72" rx="4" ry="6" fill="#ffffff" opacity="0.3" />
+          )}
+          {/* Filament lines */}
+          {lampOn && (
+            <>
+              <path d="M55 74 Q60 68 65 74" stroke="#e6a800" strokeWidth="1" fill="none" opacity="0.8" />
+              <path d="M56 80 Q60 75 64 80" stroke="#e6a800" strokeWidth="1" fill="none" opacity="0.6" />
+            </>
+          )}
+        </svg>
       </div>
 
       {/* Navigation */}
@@ -221,21 +294,39 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative z-10 pt-20 pb-32 px-4">
         <div className="max-w-5xl mx-auto text-center">
-          <Badge className="mb-6 bg-violet-500/20 text-violet-300 border-violet-500/30 hover:bg-violet-500/20">
-            <Sparkles className="h-3 w-3 mr-1" />
-            AI-Powered Job Applications
-          </Badge>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            Swipe Your Way to{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-              Dream Job
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-            Upload your resume once. AI finds matching jobs, customizes your
-            applications, and sends them — all with a single swipe.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div
+            className={`transition-all duration-700 ${textVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "0ms" }}
+          >
+            <Badge className="mb-6 bg-violet-500/20 text-violet-300 border-violet-500/30 hover:bg-violet-500/20">
+              <Sparkles className="h-3 w-3 mr-1" />
+              AI-Powered Job Applications
+            </Badge>
+          </div>
+          <div
+            className={`transition-all duration-700 ${textVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "150ms" }}
+          >
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              Swipe Your Way to{" "}
+              <span className="bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                Dream Job
+              </span>
+            </h1>
+          </div>
+          <div
+            className={`transition-all duration-700 ${textVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "300ms" }}
+          >
+            <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+              Upload your resume once. AI finds matching jobs, customizes your
+              applications, and sends them — all with a single swipe.
+            </p>
+          </div>
+          <div
+            className={`flex flex-col sm:flex-row items-center justify-center gap-4 transition-all duration-700 ${textVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "450ms" }}
+          >
             <Link href="/register">
               <Button
                 size="lg"
@@ -255,9 +346,14 @@ export default function LandingPage() {
               </Button>
             </a>
           </div>
-          <p className="mt-6 text-sm text-gray-500">
-            No credit card required · Free forever plan · Cancel anytime
-          </p>
+          <div
+            className={`transition-all duration-700 ${textVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+            style={{ transitionDelay: "600ms" }}
+          >
+            <p className="mt-6 text-sm text-gray-500">
+              No credit card required · Free forever plan · Cancel anytime
+            </p>
+          </div>
         </div>
       </section>
 

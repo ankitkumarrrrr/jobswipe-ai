@@ -75,7 +75,7 @@ export default function RegisterPage() {
       {/* Background */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-[#030712] via-[#111827] to-[#030712]" />
 
-      {/* Left side — Lamp animation */}
+      {/* Left side — Lamp + branding */}
       <div className="hidden lg:flex flex-1 items-center justify-center px-12 relative">
         {/* Light cone */}
         <div
@@ -128,7 +128,7 @@ export default function RegisterPage() {
 
         {/* Lamp SVG */}
         <div
-          className={`transition-all duration-700 ${
+          className={`transition-all duration-700 mb-8 ${
             mounted ? "translate-y-0 opacity-100 scale-100" : "translate-y-8 opacity-0 scale-90"
           }`}
         >
@@ -177,17 +177,28 @@ export default function RegisterPage() {
         </div>
 
         {/* Text below lamp */}
-        <div className={`absolute bottom-16 text-center max-w-md transition-all duration-700 ${
+        <div className={`text-center max-w-md transition-all duration-700 ${
           mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-        }`}>
-          <h2 className="text-2xl font-bold text-white mb-3">
-            {lampOn ? "Welcome aboard! ✨" : "Turn on the light 💡"}
+        }`}
+          style={{ position: 'absolute', bottom: '80px' }}
+        >
+          <span className="text-6xl block mb-4">✨</span>
+          <h2 className="text-3xl font-bold text-white mb-3">
+            Your AI job search starts here
           </h2>
-          <p className="text-gray-400 text-sm">
-            {lampOn
-              ? "Your AI-powered job search starts now"
-              : "Create your account to get started"}
+          <p className="text-gray-400 text-lg mb-8">
+            Create your free account and let our AI transform your job search experience.
           </p>
+          <div className="space-y-4">
+            {["AI-powered resume customization", "Smart job matching algorithm", "Automated cover letters", "LinkedIn & email outreach"].map((f, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <div className="h-2 w-2 rounded-full bg-amber-400" />
+                </div>
+                <span className="text-gray-300">{f}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         <style jsx>{`
