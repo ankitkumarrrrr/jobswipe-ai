@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -20,10 +20,17 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [lampOn, setLampOn] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setLampOn(true); // Turn on lamp on register
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -66,43 +73,129 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* Background */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-[#0a0118] via-[#1a0a3e] to-[#0a0118]">
-        {[...Array(20)].map((_, i) => (
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-[#030712] via-[#111827] to-[#030712]" />
+
+      {/* Left side — Lamp animation */}
+      <div className="hidden lg:flex flex-1 items-center justify-center px-12 relative">
+        {/* Light cone */}
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 transition-all duration-1000 ease-out ${
+            lampOn ? "w-[600px] h-[600px] opacity-100" : "w-0 h-0 opacity-0"
+          }`}
+          style={{
+            top: "15%",
+            background:
+              "radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.18) 0%, rgba(251,191,36,0.06) 40%, transparent 70%)",
+          }}
+        />
+
+        {/* Ambient glow */}
+        <div
+          className={`absolute left-1/2 -translate-x-1/2 w-[250px] h-[250px] rounded-full transition-opacity duration-700 ${
+            lampOn ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            top: "12%",
+            background:
+              "radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)",
+            filter: "blur(30px)",
+          }}
+        />
+
+        {/* Floating particles */}
+        {[
+          { top: "18%", left: "calc(50% - 80px)", delay: "0s" },
+          { top: "14%", left: "calc(50% + 70px)", delay: "0.5s" },
+          { top: "22%", left: "calc(50% - 50px)", delay: "1s" },
+          { top: "12%", left: "calc(50% + 30px)", delay: "1.5s" },
+          { top: "20%", left: "calc(50% + 60px)", delay: "2s" },
+        ].map((p, i) => (
           <div
             key={i}
-            className="absolute rounded-full bg-violet-500/10 animate-pulse"
+            className={`absolute w-1 h-1 rounded-full transition-opacity duration-500 ${
+              lampOn ? "opacity-100" : "opacity-0"
+            }`}
             style={{
-              width: `${10 + Math.random() * 30}px`,
-              height: `${10 + Math.random() * 30}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
+              top: p.top,
+              left: p.left,
+              background: "rgba(251,191,36,0.5)",
+              animation: lampOn
+                ? `floatLamp 3s ease-in-out ${p.delay} infinite`
+                : "none",
             }}
           />
         ))}
-      </div>
 
-      {/* Left side — branding */}
-      <div className="hidden lg:flex flex-1 items-center justify-center px-12">
-        <div className="max-w-md">
-          <span className="text-6xl">✨</span>
-          <h2 className="text-3xl font-bold text-white mb-4 mt-4">
-            Your AI job search starts here
-          </h2>
-          <p className="text-gray-400 text-lg mb-8">
-            Create your free account and let our AI transform your job search experience.
-          </p>
-          <div className="space-y-4">
-            {["AI-powered resume customization", "Smart job matching algorithm", "Automated cover letters", "LinkedIn & email outreach"].map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="h-6 w-6 rounded-full bg-violet-500/20 flex items-center justify-center">
-                  <div className="h-2 w-2 rounded-full bg-violet-400" />
-                </div>
-                <span className="text-gray-300">{f}</span>
-              </div>
-            ))}
-          </div>
+        {/* Lamp SVG */}
+        <div
+          className={`transition-all duration-700 ${
+            mounted ? "translate-y-0 opacity-100 scale-100" : "translate-y-8 opacity-0 scale-90"
+          }`}
+        >
+          <svg
+            width="200"
+            height="270"
+            viewBox="0 0 120 160"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ overflow: "visible" }}
+          >
+            <path
+              d="M30 20 L60 2 L90 20 L80 50 L40 50 Z"
+              fill={lampOn ? "#fbbf24" : "#374151"}
+              stroke={lampOn ? "#f59e0b" : "#4b5563"}
+              strokeWidth="2"
+              style={{ transition: "all 0.5s" }}
+            />
+            <ellipse
+              cx="60" cy="45" rx="18" ry="8" fill="#fef3c7"
+              opacity={lampOn ? 0.8 : 0}
+              style={{ transition: "opacity 0.5s" }}
+            />
+            <circle
+              cx="60" cy="55" r="8"
+              fill={lampOn ? "#fef08a" : "#1f2937"}
+              stroke={lampOn ? "#facc15" : "#374151"}
+              strokeWidth="1.5"
+              style={{ transition: "all 0.3s" }}
+            />
+            <circle
+              cx="60" cy="55" r="14" fill="none" stroke="#fbbf24" strokeWidth="1"
+              opacity={lampOn ? 0.4 : 0}
+              style={{ transition: "opacity 0.3s" }}
+            />
+            <circle
+              cx="60" cy="55" r="20" fill="none" stroke="#fbbf24" strokeWidth="0.5"
+              opacity={lampOn ? 0.2 : 0}
+              style={{ transition: "opacity 0.5s" }}
+            />
+            <line x1="60" y1="63" x2="60" y2="110" stroke="#6b7280" strokeWidth="4" strokeLinecap="round" />
+            <circle cx="60" cy="110" r="5" fill="#4b5563" />
+            <line x1="60" y1="110" x2="60" y2="130" stroke="#6b7280" strokeWidth="4" strokeLinecap="round" />
+            <ellipse cx="60" cy="140" rx="30" ry="8" fill="#374151" stroke="#4b5563" strokeWidth="2" />
+          </svg>
         </div>
+
+        {/* Text below lamp */}
+        <div className={`absolute bottom-16 text-center max-w-md transition-all duration-700 ${
+          mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+        }`}>
+          <h2 className="text-2xl font-bold text-white mb-3">
+            {lampOn ? "Welcome aboard! ✨" : "Turn on the light 💡"}
+          </h2>
+          <p className="text-gray-400 text-sm">
+            {lampOn
+              ? "Your AI-powered job search starts now"
+              : "Create your account to get started"}
+          </p>
+        </div>
+
+        <style jsx>{`
+          @keyframes floatLamp {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            50% { transform: translateY(-25px) translateX(12px); }
+          }
+        `}</style>
       </div>
 
       {/* Right side — form */}
@@ -112,7 +205,7 @@ export default function RegisterPage() {
             <Logo size="lg" />
           </div>
 
-          <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+          <Card className="bg-white/[0.04] border-white/[0.08] backdrop-blur-xl">
             <CardContent className="p-8">
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-white mb-2">
@@ -133,7 +226,7 @@ export default function RegisterPage() {
                       placeholder="John Doe"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-violet-500"
+                      className="pl-10 bg-white/[0.04] border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500 focus:ring-amber-500/20"
                       required
                     />
                   </div>
@@ -148,7 +241,7 @@ export default function RegisterPage() {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-violet-500"
+                      className="pl-10 bg-white/[0.04] border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500 focus:ring-amber-500/20"
                       required
                     />
                   </div>
@@ -163,7 +256,7 @@ export default function RegisterPage() {
                       placeholder="Min 8 characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-violet-500"
+                      className="pl-10 pr-10 bg-white/[0.04] border-white/10 text-white placeholder:text-gray-500 focus:border-amber-500 focus:ring-amber-500/20"
                       minLength={8}
                       required
                     />
@@ -179,7 +272,11 @@ export default function RegisterPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white h-11"
+                  className={`w-full h-11 text-white transition-all duration-500 ${
+                    lampOn
+                      ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/25"
+                      : "bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500"
+                  }`}
                   disabled={loading}
                 >
                   {loading ? (
@@ -195,7 +292,7 @@ export default function RegisterPage() {
 
               <div className="relative my-6">
                 <Separator className="bg-white/10" />
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1030] px-2 text-xs text-gray-500">
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#111827] px-2 text-xs text-gray-500">
                   or sign up with
                 </span>
               </div>
@@ -229,7 +326,7 @@ export default function RegisterPage() {
                 Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="text-violet-400 hover:text-violet-300 font-medium"
+                  className="text-amber-400 hover:text-amber-300 font-medium"
                 >
                   Sign in
                 </Link>

@@ -22,9 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import Logo from "@/components/logo";
 import { useState } from "react";
 
-const ThreeBackground = dynamic(() => import("@/components/three-background"), {
-  ssr: false,
-});
+
 
 const DemoVideo = dynamic(() => import("@/components/demo-video"), {
   ssr: false,
@@ -151,7 +149,16 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen">
-      <ThreeBackground />
+      {/* Hero Background — Lamp Image */}
+      <div className="fixed inset-0 -z-10">
+        <img
+          src="/lamp-hero.webp"
+          alt=""
+          className="w-full h-full object-cover opacity-40"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#030712]/60 via-[#030712]/40 to-[#030712]/90" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#030712]/80 via-transparent to-[#030712]/80" />
+      </div>
 
       {/* Navigation */}
       <nav className="relative z-50">
@@ -159,42 +166,15 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             <Logo />
             <div className="hidden md:flex items-center gap-8">
-              <a
-                href="#features"
-                className="text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                How It Works
-              </a>
-              <a
-                href="#demo"
-                className="text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                Demo
-              </a>
-              <a
-                href="#pricing"
-                className="text-sm text-gray-300 hover:text-white transition-colors"
-              >
-                Pricing
-              </a>
+              <a href="#features" className="text-sm text-gray-300 hover:text-white transition-colors">Features</a>
+              <a href="#how-it-works" className="text-sm text-gray-300 hover:text-white transition-colors">How It Works</a>
+              <a href="#demo" className="text-sm text-gray-300 hover:text-white transition-colors">Demo</a>
+              <a href="#pricing" className="text-sm text-gray-300 hover:text-white transition-colors">Pricing</a>
               <Link href="/login">
-                <Button
-                  variant="ghost"
-                  className="text-gray-300 hover:text-white"
-                >
-                  Log In
-                </Button>
+                <Button variant="ghost" className="text-gray-300 hover:text-white">Log In</Button>
               </Link>
               <Link href="/register">
-                <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white">
-                  Sign Up Free
-                </Button>
+                <Button className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white">Sign Up Free</Button>
               </Link>
             </div>
             <button
