@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useActionState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Logo from "@/components/logo";
-import { toast } from "sonner";
+import { registerAction } from "@/app/actions/auth";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,41 +20,34 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [lampOn, setLampOn] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [state, formAction, isPending] = useActionState(registerAction, null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (isPending) {
+      setLampOn(true);
+    }
+  }, [isPending]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setLampOn(true); // Turn on lamp on register
+    setLampOn(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error("Registration failed", { description: data.error });
-        return;
-      }
-
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: true,
-        callbackUrl: "/dashboard",
-      });
-      // signIn with redirect:true handles everything server-side
+      const formData = new FormData();
+      formData.set("name", name);
+      formData.set("email", email);
+      formData.set("password", password);
+      await formAction(formData);
+      // Server action handles redirect — no client-side redirect needed
     } catch {
-      toast.error("Something went wrong");
+      // NEXT_REDIRECT errors are expected on success
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 100);
     }
   };
 
@@ -193,6 +184,12 @@ export default function RegisterPage() {
                 </p>
               </div>
 
+              {state?.error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                  {state.error}
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-gray-300">Full Name</Label>
@@ -200,6 +197,7 @@ export default function RegisterPage() {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
                       type="text"
+                      name="name"
                       placeholder="John Doe"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -215,6 +213,7 @@ export default function RegisterPage() {
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
                       type="email"
+                      name="email"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -230,6 +229,7 @@ export default function RegisterPage() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                     <Input
                       type={showPassword ? "text" : "password"}
+                      name="password"
                       placeholder="Min 8 characters"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -254,9 +254,9 @@ export default function RegisterPage() {
                       ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/25"
                       : "bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500"
                   }`}
-                  disabled={loading}
+                  disabled={loading || isPending}
                 >
-                  {loading ? (
+                  {loading || isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : (
                     <>

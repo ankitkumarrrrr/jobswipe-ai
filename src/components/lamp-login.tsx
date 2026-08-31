@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { useState, useEffect, useActionState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { loginAction } from "@/app/actions/auth";
 
 export default function LampLoginAnimation() {
   const [email, setEmail] = useState("");
@@ -14,10 +14,17 @@ export default function LampLoginAnimation() {
   const [isLoading, setIsLoading] = useState(false);
   const [lampOn, setLampOn] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [state, formAction, isPending] = useActionState(loginAction, null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (isPending) {
+      setLampOn(true);
+    }
+  }, [isPending]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,18 +32,16 @@ export default function LampLoginAnimation() {
     setLampOn(true);
 
     try {
-      await signIn("credentials", {
-        email,
-        password,
-        redirect: true,
-        callbackUrl: "/dashboard",
-      });
-      // signIn with redirect:true handles the redirect server-side
-      // The browser will navigate to /dashboard after cookie is set
+      const formData = new FormData();
+      formData.set("email", email);
+      formData.set("password", password);
+      await formAction(formData);
+      // Server action handles redirect — no client-side redirect needed
     } catch {
-      setLampOn(false);
-      setIsLoading(false);
-      alert("Login failed. Please try again.");
+      // NEXT_REDIRECT errors are expected on success
+    } finally {
+      // Only reset if we didn't redirect
+      setTimeout(() => setIsLoading(false), 100);
     }
   };
 
@@ -221,6 +226,12 @@ export default function LampLoginAnimation() {
             </p>
           </div>
 
+          {state?.error && (
+            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {state.error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-300">
@@ -230,6 +241,7 @@ export default function LampLoginAnimation() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
@@ -248,6 +260,7 @@ export default function LampLoginAnimation() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
@@ -292,9 +305,9 @@ export default function LampLoginAnimation() {
                   ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/25"
                   : "bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500"
               }`}
-              disabled={isLoading}
+              disabled={isLoading || isPending}
             >
-              {isLoading ? (
+              {isLoading || isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <>
