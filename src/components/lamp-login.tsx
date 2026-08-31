@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginAction } from "@/app/actions/auth";
 
 export default function LampLoginAnimation() {
   const [email, setEmail] = useState("");
@@ -14,35 +13,50 @@ export default function LampLoginAnimation() {
   const [isLoading, setIsLoading] = useState(false);
   const [lampOn, setLampOn] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [state, formAction, isPending] = useActionState(loginAction, null);
+  const [csrfToken, setCsrfToken] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setMounted(true);
+    // Fetch CSRF token from NextAuth
+    fetch("/api/auth/csrf")
+      .then((res) => res.json())
+      .then((data) => setCsrfToken(data.csrfToken))
+      .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (isPending) {
-      setLampOn(true);
-    }
-  }, [isPending]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setLampOn(true);
+    setError("");
 
-    try {
-      const formData = new FormData();
-      formData.set("email", email);
-      formData.set("password", password);
-      await formAction(formData);
-      // Server action handles redirect — no client-side redirect needed
-    } catch {
-      // NEXT_REDIRECT errors are expected on success
-    } finally {
-      // Only reset if we didn't redirect
-      setTimeout(() => setIsLoading(false), 100);
+    // Build a hidden form and submit it directly to NextAuth
+    // This triggers a server-side 302 redirect with Set-Cookie — works on ALL devices
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/api/auth/callback/credentials?callbackUrl=/dashboard";
+
+    const fields: Record<string, string> = {
+      csrfToken,
+      email,
+      password,
+      callbackUrl: "/dashboard",
+      redirect: "true",
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
     }
+
+    document.body.appendChild(form);
+    form.submit();
+    // The browser will follow the 302 redirect automatically
+    // No JavaScript redirect needed — the server sets the cookie and redirects
   };
 
   return (
@@ -226,9 +240,9 @@ export default function LampLoginAnimation() {
             </p>
           </div>
 
-          {state?.error && (
+          {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {state.error}
+              {error}
             </div>
           )}
 
@@ -305,9 +319,9 @@ export default function LampLoginAnimation() {
                   ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/25"
                   : "bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500"
               }`}
-              disabled={isLoading || isPending}
+              disabled={isLoading || !csrfToken}
             >
-              {isLoading || isPending ? (
+              {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <>

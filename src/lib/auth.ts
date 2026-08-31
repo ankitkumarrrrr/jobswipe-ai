@@ -62,6 +62,7 @@ providers.push(
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers,
   session: { strategy: "jwt" },
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   pages: {
     signIn: "/login",
