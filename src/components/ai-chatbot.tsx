@@ -170,12 +170,12 @@ export default function AiChatbot() {
       {isOpen && (
         <div
           ref={chatRef}
-          className="fixed z-50 w-[380px] h-[520px] bg-[#111114] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          className="fixed z-50 w-[calc(100vw-32px)] max-w-[380px] h-[calc(100vh-120px)] max-h-[520px] bg-[#111114] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           style={{
-            left: position.x || "calc(100vw - 420px)",
-            top: position.y || "calc(100vh - 580px)",
-            bottom: position.y ? "auto" : "20px",
-            right: position.x ? "auto" : "20px",
+            left: position.x || undefined,
+            top: position.y || undefined,
+            bottom: position.y ? "auto" : "16px",
+            right: position.x ? "auto" : "16px",
           }}
         >
           {/* Header — draggable */}
