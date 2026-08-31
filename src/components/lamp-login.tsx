@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { signIn } from "next-auth/react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,11 +19,32 @@ export default function LampLoginAnimation() {
     setMounted(true);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setLampOn(true);
-    setTimeout(() => setIsLoading(false), 2000);
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setLampOn(false);
+        setIsLoading(false);
+        alert("Login failed: " + result.error);
+      } else {
+        // Wait for cookie to be set, then redirect
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 500);
+      }
+    } catch {
+      setLampOn(false);
+      setIsLoading(false);
+    }
   };
 
   return (
