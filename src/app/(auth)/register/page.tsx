@@ -71,116 +71,95 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Background */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-[#030712] via-[#111827] to-[#030712]" />
-
-      {/* Left side — Lamp + branding */}
-      <div className="hidden lg:flex flex-1 items-center justify-center px-12 relative">
+    <div className="min-h-screen flex bg-gradient-to-b from-[#0a0a0a] via-[#0f0f0f] to-[#0a0a0a]">
+      {/* Left side — Pendant lamp + branding */}
+      <div className="hidden lg:flex flex-1 items-center justify-center px-12 relative overflow-hidden">
         {/* Light cone */}
         <div
-          className={`absolute left-1/2 -translate-x-1/2 transition-all duration-1000 ease-out ${
-            lampOn ? "w-[600px] h-[600px] opacity-100" : "w-0 h-0 opacity-0"
-          }`}
-          style={{
-            top: "15%",
-            background:
-              "radial-gradient(ellipse at 50% 0%, rgba(251,191,36,0.18) 0%, rgba(251,191,36,0.06) 40%, transparent 70%)",
-          }}
-        />
-
-        {/* Ambient glow */}
-        <div
-          className={`absolute left-1/2 -translate-x-1/2 w-[250px] h-[250px] rounded-full transition-opacity duration-700 ${
+          className={`absolute transition-all duration-[1500ms] ease-out ${
             lampOn ? "opacity-100" : "opacity-0"
           }`}
           style={{
-            top: "12%",
+            top: 0,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "100%",
+            height: "90%",
             background:
-              "radial-gradient(circle, rgba(251,191,36,0.2) 0%, transparent 70%)",
-            filter: "blur(30px)",
+              "radial-gradient(ellipse at 50% 8%, rgba(255,220,130,0.18) 0%, rgba(255,200,80,0.06) 25%, transparent 55%)",
           }}
         />
 
-        {/* Floating particles */}
-        {[
-          { top: "18%", left: "calc(50% - 80px)", delay: "0s" },
-          { top: "14%", left: "calc(50% + 70px)", delay: "0.5s" },
-          { top: "22%", left: "calc(50% - 50px)", delay: "1s" },
-          { top: "12%", left: "calc(50% + 30px)", delay: "1.5s" },
-          { top: "20%", left: "calc(50% + 60px)", delay: "2s" },
-        ].map((p, i) => (
-          <div
-            key={i}
-            className={`absolute w-1 h-1 rounded-full transition-opacity duration-500 ${
-              lampOn ? "opacity-100" : "opacity-0"
-            }`}
-            style={{
-              top: p.top,
-              left: p.left,
-              background: "rgba(251,191,36,0.5)",
-              animation: lampOn
-                ? `floatLamp 3s ease-in-out ${p.delay} infinite`
-                : "none",
-            }}
-          />
-        ))}
-
-        {/* Lamp SVG */}
+        {/* Ambient warm glow */}
         <div
-          className={`transition-all duration-700 mb-8 ${
-            mounted ? "translate-y-0 opacity-100 scale-100" : "translate-y-8 opacity-0 scale-90"
+          className={`absolute transition-opacity duration-1000 ${
+            lampOn ? "opacity-100" : "opacity-0"
           }`}
+          style={{
+            top: "5%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 300,
+            height: 300,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(255,200,80,0.2) 0%, transparent 70%)",
+            filter: "blur(50px)",
+          }}
+        />
+
+        {/* Pendant Lamp SVG — centered */}
+        <div
+          className={`absolute transition-all duration-700 ${
+            lampOn ? "opacity-100" : "opacity-0"
+          }`}
+          style={{ top: 0, left: "50%", transform: "translateX(-50%)" }}
         >
           <svg
-            width="200"
-            height="270"
-            viewBox="0 0 120 160"
+            width="180"
+            height="320"
+            viewBox="0 0 120 220"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ overflow: "visible" }}
           >
-            <path
-              d="M30 20 L60 2 L90 20 L80 50 L40 50 Z"
-              fill={lampOn ? "#fbbf24" : "#374151"}
-              stroke={lampOn ? "#f59e0b" : "#4b5563"}
-              strokeWidth="2"
-              style={{ transition: "all 0.5s" }}
-            />
+            {/* Wire */}
+            <line x1="60" y1="0" x2="60" y2="50" stroke="#555" strokeWidth="1.5" />
+            {/* Ceiling plate */}
+            <rect x="48" y="0" width="24" height="7" rx="3" fill="#444" />
+            {/* Socket holder */}
+            <rect x="50" y="45" width="20" height="16" rx="3" fill="#3a3a3a" />
+            {/* Socket rim */}
+            <rect x="47" y="57" width="26" height="5" rx="2" fill="#4a4a4a" />
+            {/* Bulb outer */}
             <ellipse
-              cx="60" cy="45" rx="18" ry="8" fill="#fef3c7"
-              opacity={lampOn ? 0.8 : 0}
-              style={{ transition: "opacity 0.5s" }}
+              cx="60" cy="82"
+              rx="18" ry="22"
+              fill={lampOn ? "#ffeaa7" : "#2a2a2a"}
+              style={{ transition: "fill 0.8s ease" }}
             />
-            <circle
-              cx="60" cy="55" r="8"
-              fill={lampOn ? "#fef08a" : "#1f2937"}
-              stroke={lampOn ? "#facc15" : "#374151"}
-              strokeWidth="1.5"
-              style={{ transition: "all 0.3s" }}
-            />
-            <circle
-              cx="60" cy="55" r="14" fill="none" stroke="#fbbf24" strokeWidth="1"
-              opacity={lampOn ? 0.4 : 0}
-              style={{ transition: "opacity 0.3s" }}
-            />
-            <circle
-              cx="60" cy="55" r="20" fill="none" stroke="#fbbf24" strokeWidth="0.5"
-              opacity={lampOn ? 0.2 : 0}
-              style={{ transition: "opacity 0.5s" }}
-            />
-            <line x1="60" y1="63" x2="60" y2="110" stroke="#6b7280" strokeWidth="4" strokeLinecap="round" />
-            <circle cx="60" cy="110" r="5" fill="#4b5563" />
-            <line x1="60" y1="110" x2="60" y2="130" stroke="#6b7280" strokeWidth="4" strokeLinecap="round" />
-            <ellipse cx="60" cy="140" rx="30" ry="8" fill="#374151" stroke="#4b5563" strokeWidth="2" />
+            {/* Bulb inner glow */}
+            {lampOn && (
+              <ellipse cx="60" cy="78" rx="10" ry="12" fill="#fff3c4" opacity="0.7" />
+            )}
+            {/* Bulb highlight */}
+            {lampOn && (
+              <ellipse cx="55" cy="72" rx="4" ry="6" fill="#ffffff" opacity="0.3" />
+            )}
+            {/* Filament lines */}
+            {lampOn && (
+              <>
+                <path d="M55 74 Q60 68 65 74" stroke="#e6a800" strokeWidth="1" fill="none" opacity="0.8" />
+                <path d="M56 80 Q60 75 64 80" stroke="#e6a800" strokeWidth="1" fill="none" opacity="0.6" />
+              </>
+            )}
           </svg>
         </div>
 
         {/* Text below lamp */}
-        <div className={`text-center max-w-md transition-all duration-700 ${
-          mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-        }`}
-          style={{ position: 'absolute', bottom: '80px' }}
+        <div
+          className={`text-center max-w-md transition-all duration-700 ${
+            mounted ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          }`}
+          style={{ position: "absolute", bottom: "80px" }}
         >
           <span className="text-6xl block mb-4">✨</span>
           <h2 className="text-3xl font-bold text-white mb-3">
@@ -200,13 +179,6 @@ export default function RegisterPage() {
             ))}
           </div>
         </div>
-
-        <style jsx>{`
-          @keyframes floatLamp {
-            0%, 100% { transform: translateY(0) translateX(0); }
-            50% { transform: translateY(-25px) translateX(12px); }
-          }
-        `}</style>
       </div>
 
       {/* Right side — form */}
